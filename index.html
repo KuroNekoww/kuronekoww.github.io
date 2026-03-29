@@ -116,10 +116,11 @@
             color: var(--text-main); font-size: 1.1rem; padding: 10px 0; outline: none;
         }
 
-        /* 修改后的导航框动画逻辑（参考你提供的代码） */
-        .category { 
-            margin-bottom: 45px; 
-            animation: fadeInOut 1s ease-out forwards;
+        .category { margin-bottom: 45px; }
+        .category-title {
+            font-size: 1.25rem; font-weight: 800; margin-bottom: 20px;
+            color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+            padding-left: 12px; border-left: 5px solid var(--accent-color);
         }
 
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
@@ -131,38 +132,19 @@
             text-decoration: none; color: inherit;
             display: flex; align-items: center; gap: 16px; 
             border: 1px solid rgba(255,255,255,0.1);
-            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-            position: relative;
-            overflow: hidden;
+            transition: background 0.3s ease, transform 0.12s ease;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.6s forwards;
+            will-change: transform, opacity, background;
         }
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
 
-        /* 桌面端悬浮效果（参考代码） */
-        @media (hover: hover) {
-            .card:hover { 
-                transform: translateY(-8px) scale(1.02); 
-                background: var(--card-hover);
-                border-color: var(--accent-color);
-                box-shadow: 0 15px 35px rgba(0,0,0,0.3);
-            }
-            .card::after {
-                content: ""; 
-                position: absolute; 
-                top: 0; left: -100%; 
-                width: 100%; height: 100%;
-                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-                transition: 0.5s;
-            }
-            .card:hover::after { left: 100%; }
-        }
-
-        /* 移动端点击反馈 */
-        .card:active { 
-            transform: scale(0.96); 
-            opacity: 0.8; 
-        }
-
-        .icon { font-size: 2rem; min-width: 45px; text-align: center; transition: transform 0.3s ease; }
-        .card:hover .icon { transform: rotate(15deg) scale(1.1); }
+        .card:hover { background: var(--card-hover); }
+        .card:active { transform: scale(0.95); background: var(--card-hover); }
+        .card .icon { font-size: 2rem; min-width: 45px; text-align: center; }
+        .card .info h3 { margin: 0; font-size: 1.05rem; font-weight: 700; }
+        .card .info p { margin: 6px 0 0; font-size: 0.85rem; opacity: 0.85; line-height: 1.4; }
 
         .footer-download {
             text-align: center; margin-top: 40px; padding: 15px 30px;
@@ -175,12 +157,6 @@
             font-weight: 800; margin-left: 5px; transition: 0.2s;
         }
         .footer-download a:hover { text-decoration: underline; opacity: 0.8; }
-
-        /* 动画定义（参考代码） */
-        @keyframes fadeInOut { 
-            from { opacity: 0; transform: translateY(20px); } 
-            to { opacity: 1; transform: translateY(0); } 
-        }
 
         @media (max-width: 600px) { 
             .grid { grid-template-columns: 1fr; } 
@@ -216,20 +192,25 @@
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     const bgUrl = isMobile ? 'https://api.yppp.net/pe.php' : 'https://api.yppp.net/pc.php';
 
-    function initBackground() {
+    // 修复：统一使用 fetch 获取真实重定向 URL，确保背景和下载按钮完全一致
+    async function initBackground() {
         const bgLayer = document.getElementById('bg-layer');
         const downloadBtn = document.getElementById('download-link');
-        const img = new Image();
-        img.src = bgUrl;
-        img.onload = () => {
-            bgLayer.style.backgroundImage = `url('${img.src}')`;
-            bgLayer.style.opacity = '1';
-            downloadBtn.href = img.src;
-        };
-        img.onerror = () => {
+
+        try {
+            const res = await fetch(bgUrl);
+            if (res.ok) {
+                const finalUrl = res.url;   // 获取 302 重定向后的真实图片地址
+                bgLayer.style.backgroundImage = `url('${finalUrl}')`;
+                bgLayer.style.opacity = '1';
+                downloadBtn.href = finalUrl;   // 与背景使用完全相同的 URL
+            }
+        } catch (e) {
+            console.error("背景加载失败", e);
             bgLayer.style.backgroundImage = `url('${bgUrl}')`;
             bgLayer.style.opacity = '1';
-        };
+            downloadBtn.href = bgUrl;
+        }
     }
 
     function preventKeyboardZoom() {
@@ -248,7 +229,7 @@
     function getHitokoto() {
         const hElem = document.getElementById('hitokoto');
         hElem.style.opacity = '0.4';
-        fetch('https://v1.hitokoto.cn?c=a&c=b&c=c', { cache: 'no-cache' })
+        fetch('https://v1.hitokoto.cn?c=a&max_length=25', { cache: 'no-cache' })
             .then(res => res.ok ? res.json() : Promise.reject())
             .then(data => {
                 hElem.innerText = `${data.hitokoto} —— 「${data.from}」`;
@@ -269,18 +250,16 @@
                 document.getElementById('page-title').innerText = config.header.title;
                 document.title = config.header.title;
             }
-
             const container = document.getElementById('nav-container');
             container.innerHTML = '';
             config.categories.forEach((cat, index) => {
                 const section = document.createElement('div');
                 section.className = 'category';
-                section.style.animationDelay = `${index * 0.1}s`;   /* 参考代码的渐次入场 */
                 section.innerHTML = `
                     <div class="category-title">${cat.name}</div>
                     <div class="grid">
                         ${cat.links.map(link => `
-                            <a href="${link.url}" class="card" target="_blank">
+                            <a href="${link.url}" class="card" target="_blank" style="animation-delay: ${index * 80 + 100}ms">
                                 <div class="icon">${link.icon || '🔗'}</div>
                                 <div class="info">
                                     <h3>${link.name}</h3>
