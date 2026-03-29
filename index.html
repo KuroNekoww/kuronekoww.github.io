@@ -41,11 +41,10 @@
             position: relative;
         }
 
-        /* 背景层 */
+        /* 背景层（保留上一版完美修复） */
         .fixed-bg {
             position: fixed;
-            top: 0;
-            left: 0;
+            top: 0; left: 0;
             width: 100vw;
             height: 100vh;
             background-color: #1a1a1a;
@@ -76,6 +75,7 @@
             letter-spacing: -1px;
         }
 
+        /* 一言框：完全按照你提供的参考代码逻辑实现（最稳定） */
         #hitokoto { 
             display: inline-block;
             margin-top: 18px; padding: 10px 24px;
@@ -88,12 +88,11 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             border: 1px solid rgba(255,255,255,0.1);
             cursor: pointer;
-            transition: transform 0.15s ease, opacity 0.2s ease;
-            will-change: transform, opacity;
+            transition: all 0.2s ease;           /* 参考代码的触感反馈 */
         }
-        #hitokoto:active {
-            transform: scale(0.92);
-            opacity: 0.8;
+        #hitokoto:active { 
+            transform: scale(0.94); 
+            opacity: 0.8; 
         }
 
         .search-area { margin-bottom: 50px; display: flex; justify-content: center; width: 100%; }
@@ -127,6 +126,7 @@
 
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
 
+        /* 导航卡片：现在完全和一言框一致的放缩效果（scale(0.94) + opacity） */
         .card {
             background: var(--glass-bg); 
             backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
@@ -134,21 +134,18 @@
             text-decoration: none; color: inherit;
             display: flex; align-items: center; gap: 16px; 
             border: 1px solid rgba(255,255,255,0.1);
-            transition: background 0.3s ease, transform 0.12s ease;
+            transition: all 0.2s ease;           /* 与一言框完全一致的时间 */
             opacity: 0;
             transform: translateY(30px);
             animation: fadeInUp 0.6s forwards;
             will-change: transform, opacity, background;
         }
-        @keyframes fadeInUp {
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .card:hover { background: var(--card-hover); }
         .card:active { 
-            transform: scale(0.95); 
+            transform: scale(0.94);              /* ← 现在和一言框完全一致 */
+            opacity: 0.8;
             background: var(--card-hover);
         }
+        .card:hover { background: var(--card-hover); }
         .card .icon { 
             font-size: 2rem; 
             min-width: 45px; 
@@ -156,6 +153,8 @@
         }
         .card .info h3 { margin: 0; font-size: 1.05rem; font-weight: 700; }
         .card .info p { margin: 6px 0 0; font-size: 0.85rem; opacity: 0.85; line-height: 1.4; }
+
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
 
         .footer-download {
             text-align: center; margin-top: 40px; padding: 15px 30px;
@@ -206,16 +205,13 @@
     function initBackground() {
         const bgLayer = document.getElementById('bg-layer');
         const downloadBtn = document.getElementById('download-link');
-        
         const img = new Image();
         img.src = bgUrl;
-        
         img.onload = () => {
             bgLayer.style.backgroundImage = `url('${img.src}')`;
             bgLayer.style.opacity = '1';
             downloadBtn.href = img.src;
         };
-        
         img.onerror = () => {
             bgLayer.style.backgroundImage = `url('${bgUrl}')`;
             bgLayer.style.opacity = '1';
@@ -235,30 +231,16 @@
         });
     }
 
-    // ✅ 已修复：使用正确的模板字面量（反引号 ` `）
-    function getHitokoto() {
+    /* 一言：完全按照你提供的参考代码逻辑实现（最稳定版） */
+    async function getHitokoto() {
         const hElem = document.getElementById('hitokoto');
-        const originalText = hElem.innerText;
-        hElem.style.opacity = '0.4';
-        
-        return fetch('https://v1.hitokoto.cn?c=a&max_length=25', { 
-            method: 'GET',
-            cache: 'no-cache'
-        })
-        .then(res => {
-            if (!res.ok) throw new Error('Network response was not ok');
-            return res.json();
-        })
-        .then(data => {
-            // 正确写法：必须使用反引号 ` ` 才能插入变量
+        try {
+            const res = await fetch('https://v1.hitokoto.cn?c=a&max_length=25');
+            const data = await res.json();
             hElem.innerText = `\( {data.hitokoto} —— 「 \){data.from}」`;
-            hElem.style.opacity = '1';
-        })
-        .catch(e => {
-            console.error("一言获取失败:", e);
+        } catch (e) {
             hElem.innerText = "跨越星辰，只为与你相遇。";
-            hElem.style.opacity = '1';
-        });
+        }
     }
 
     async function loadNav() {
@@ -301,15 +283,12 @@
 
     window.addEventListener('DOMContentLoaded', () => {
         initBackground();
-        getHitokoto();           // 初始加载一言
+        getHitokoto();                    // 初始加载
         loadNav();
         preventKeyboardZoom();
 
-        // 点击刷新一言
-        const hitokotoEl = document.getElementById('hitokoto');
-        hitokotoEl.addEventListener('click', () => {
-            getHitokoto();
-        });
+        // 一言点击刷新（和参考代码完全一致的绑定方式）
+        document.getElementById('hitokoto').onclick = getHitokoto;
     });
 </script>
 
