@@ -1,0 +1,51 @@
+# 网站头部信息
+header:
+  title: "山本小面包🍞的私人导航页"
+  subtitle: "路漫漫其修远兮，先吃个面包再出发"
+
+# 分类与链接
+categories:
+  - name: "🚀 常用工具"
+    links:
+      - name: "GitHub"
+        url: "https://github.com"
+        icon: "🐙"
+        desc: "全球最大的代码托管与开源协作平台。"
+      - name: "ChatGPT"
+        url: "https://chatgpt.com"
+        icon: "🤖"
+        desc: "聪明的人工智能助手，解决一切疑问。"
+      - name: "Google"
+        url: "https://google.com"
+        icon: "🔍"
+        desc: "寻找答案的最佳起点。"
+
+  - name: "🎨 设计与开发"
+    links:
+      - name: "Figma"
+        url: "https://figma.com"
+        icon: "🖌️"
+        desc: "基于浏览器的强大 UI 设计工具。"
+      - name: "MDN Web Docs"
+        url: "https://developer.mozilla.org"
+        icon: "🌐"
+        desc: "最权威的 Web 开发技术文档。"
+      - name: "Iconfont"
+        url: "https://www.iconfont.cn"
+        icon: "🎨"
+        desc: "阿里巴巴矢量图标库。"
+
+  - name: "📺 休闲娱乐"
+    links:
+      - name: "Bilibili"
+        url: "https://bilibili.com"
+        icon: "📺"
+        desc: "国内最火的年轻人视频社区。"
+      - name: "YouTube"
+        url: "https://youtube.com"
+        icon: "▶️"
+        desc: "全球海量视频内容分享平台。"
+      - name: "豆瓣"
+        url: "https://douban.com"
+        icon: "📚"
+        desc: "电影、书籍、音乐的评分与交流。"
