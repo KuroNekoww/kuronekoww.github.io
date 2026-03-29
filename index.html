@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>山本小面包🍞的私人导航页</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+    <style>
+        :root {
+            /* ☀️ 浅色模式 */
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --primary-color: #3b82f6;
+            --border-color: #e2e8f0;
+            --hover-shadow: rgba(59, 130, 246, 0.12);
+            --card-hover-border: #bfdbfe;
+        }
+
+        /* 🌙 自动触发深色模式 */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #0f172a;
+                --card-bg: #1e293b;
+                --text-main: #f1f5f9;
+                --text-muted: #94a3b8;
+                --primary-color: #60a5fa;
+                --border-color: #334155;
+                --hover-shadow: rgba(0, 0, 0, 0.3);
+                --card-hover-border: #475569;
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .header h1 {
+            font-size: 2.6rem;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -1px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            margin-top: 12px;
+            font-size: 1.1rem;
+        }
+
+        .category {
+            margin-bottom: 50px;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .category-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .category-title::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background-color: var(--border-color);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 22px;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px var(--hover-shadow);
+            border-color: var(--card-hover-border);
+        }
+
+        .icon {
+            font-size: 2.2rem;
+            background: var(--bg-color);
+            min-width: 52px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            transition: background-color 0.3s ease;
+        }
+
+        .info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .info h3 {
+            margin: 0 0 6px 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .info p {
+            margin: 0;
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* 动画效果 */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: 1fr; }
+            .header h1 { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1 id="page-title">山本小面包🍞的私人导航页</h1>
+        <p id="page-subtitle">正在读取配置...</p>
+    </div>
+
+    <div id="nav-container"></div>
+</div>
+
+<script>
+    async function init() {
+        const navContainer = document.getElementById('nav-container');
+        try {
+            const response = await fetch('./config.yml');
+            if (!response.ok) throw new Error('未找到 config.yml 配置文件');
+            
+            const yamlText = await response.text();
+            const config = jsyaml.load(yamlText);
+            
+            render(config);
+        } catch (err) {
+            navContainer.innerHTML = `<p style="text-align:center; color:red;">加载失败: ${err.message}</p>`;
+        }
+    }
+
+    function render(data) {
+        // 更新标题
+        if (data.header) {
+            document.title = data.header.title || document.title;
+            document.getElementById('page-title').innerText = data.header.title;
+            document.getElementById('page-subtitle').innerText = data.header.subtitle || '';
+        }
+
+        const container = document.getElementById('nav-container');
+        container.innerHTML = '';
+
+        data.categories.forEach(cat => {
+            const section = document.createElement('section');
+            section.className = 'category';
+            
+            section.innerHTML = `
+                <div class="category-title">${cat.name}</div>
+                <div class="grid">
+                    ${cat.links.map(link => `
+                        <a href="${link.url}" class="card" target="_blank" rel="noopener">
+                            <div class="icon">${link.icon || '🔗'}</div>
+                            <div class="info">
+                                <h3>${link.name}</h3>
+                                <p>${link.desc || ''}</p>
+                            </div>
+                        </a>
+                    `).join('')}
+                </div>
+            `;
+            container.appendChild(section);
+        });
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>
