@@ -258,36 +258,30 @@
             const response = await fetch('./config.yml');
             const yamlText = await response.text();
             const config = jsyaml.load(yamlText);
-            if (config.header && config.header.title) {
-                document.getElementById('page-title').innerText = config.header.title;
-                document.title = config.header.title;
-            }
+            if (config.header) document.getElementById('page-title').innerText = config.header.title;
+
             const container = document.getElementById('nav-container');
             container.innerHTML = '';
             config.categories.forEach((cat, index) => {
                 const section = document.createElement('div');
                 section.className = 'category';
+                section.style.animationDelay = `${index * 0.1}s`; // 渐次入场
                 section.innerHTML = `
-                    <div class="category-title">${cat.name}</div>
-                    <div class="grid">
-                        ${cat.links.map(link => `
-                            <a href="${link.url}" class="card" target="_blank" style="animation-delay: ${index * 80 + 100}ms">
-                                <div class="icon">${link.icon || '🔗'}</div>
-                                <div class="info">
-                                    <h3>${link.name}</h3>
-                                    <p>${link.desc || ''}</p>
-                                </div>
-                            </a>
-                        `).join('')}
-                    </div>
-                `;
+                    <div class="category-title" style="color:#fff; font-weight:bold; margin-bottom:15px; text-shadow:0 2px 10px rgba(0,0,0,0.5);">${cat.name}</div>
+                    <div class="grid">${cat.links.map(link => `
+                        <a href="${link.url}" class="card" target="_blank">
+                            <div class="icon">${link.icon || '🔗'}</div>
+                            <div class="info">
+                                <h3 style="margin:0; font-size:1.05rem;">${link.name}</h3>
+                                <p style="margin:5px 0 0; font-size:0.85rem; opacity:0.8;">${link.desc || ''}</p>
+                            </div>
+                        </a>
+                    `).join('')}</div>`;
                 container.appendChild(section);
             });
-        } catch (err) {
-            console.error("YAML 配置加载失败:", err);
-        }
-    }
-
+        } catch (e) { console.error(e); }
+                }
+    
     window.addEventListener('DOMContentLoaded', () => {
         initBackground();
         getHitokoto();
