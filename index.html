@@ -74,9 +74,15 @@
             color: var(--text-main);
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            transition: transform 0.15s ease, opacity 0.2s ease;
+        }
+        #hitokoto:active {
+            transform: scale(0.92);
+            opacity: 0.8;
         }
 
-        /* Bing 搜索框设计 */
+        /* Bing 搜索框设计 - 只有激活时才有高亮边框 */
         .search-area { margin-bottom: 50px; display: flex; justify-content: center; width: 100%; }
         .search-box {
             display: flex; align-items: center; 
@@ -88,7 +94,11 @@
             box-shadow: 0 15px 35px rgba(0,0,0,0.2); 
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .search-box:focus-within { transform: translateY(-3px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); border-color: var(--accent-color); }
+        .search-box:focus-within { 
+            transform: translateY(-3px); 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3); 
+            border-color: var(--accent-color); 
+        }
         .search-box img { width: 26px; height: 26px; margin-right: 12px; }
         .search-box input {
             flex: 1; border: none; background: transparent;
@@ -103,7 +113,7 @@
             padding-left: 12px; border-left: 5px solid var(--accent-color);
         }
 
-        /* 卡片网格布局 */
+        /* 卡片网格布局 - 已移除平移效果（translateY），只保留点击放缩 + 桌面图标倾斜 */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
 
         .card {
@@ -113,16 +123,31 @@
             text-decoration: none; color: inherit;
             display: flex; align-items: center; gap: 16px; 
             border: 1px solid rgba(255,255,255,0.1);
-            transition: all 0.3s ease;
+            transition: background 0.3s ease;
         }
         .card:hover { 
-            transform: translateY(-6px); 
             background: var(--card-hover); 
-            border-color: var(--accent-color);
+            /* 平移效果已完全移除 */
         }
-        .card .icon { font-size: 2rem; min-width: 45px; text-align: center; }
+        .card:active { 
+            transform: scale(0.95); 
+            background: var(--card-hover);
+        }
+        .card .icon { 
+            font-size: 2rem; 
+            min-width: 45px; 
+            text-align: center; 
+            transition: transform 0.3s ease;
+        }
         .card .info h3 { margin: 0; font-size: 1.05rem; font-weight: 700; }
         .card .info p { margin: 6px 0 0; font-size: 0.85rem; opacity: 0.85; line-height: 1.4; }
+
+        /* 桌面端鼠标悬停时图标额外倾斜15度（保留先前版本风格） */
+        @media (hover: hover) {
+            .card:hover .icon { 
+                transform: rotate(15deg) scale(1.1); 
+            }
+        }
 
         /* 底部下载文字 */
         .footer-download {
@@ -137,7 +162,10 @@
         }
         .footer-download a:hover { text-decoration: underline; opacity: 0.8; }
 
-        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .header h1 { font-size: 2rem; } }
+        @media (max-width: 600px) { 
+            .grid { grid-template-columns: 1fr; } 
+            .header h1 { font-size: 2rem; } 
+        }
     </style>
 </head>
 <body>
@@ -150,7 +178,7 @@
 
     <div class="search-area">
         <form class="search-box" action="https://www.bing.com/search" method="get" target="_blank">
-            <img src="https://image.pngaaa.com/445/5409445-middle.png" alt="Bing">
+            <img src="https://picui.ogmua.cn/s1/2026/03/30/69c94d3fbf8c8.webp" alt="Bing">
             <input type="text" name="q" placeholder="在 Bing 中搜索..." autocomplete="off">
         </form>
     </div>
@@ -179,14 +207,17 @@
         }).catch(e => console.error("背景加载失败:", e));
     }
 
-    // 2. 获取一言（二次元 API）
+    // 2. 获取一言（支持多次刷新）
     function getHitokoto() {
-        fetch('https://v1.hitokoto.cn?c=a&c=b&c=c') // 仅选择动画、漫画、游戏分类
+        return fetch('https://v1.hitokoto.cn?c=a&c=b&c=c')
             .then(res => res.json())
             .then(data => {
-                document.getElementById('hitokoto').innerText = `${data.hitokoto} —— 「${data.from}」`;
+                document.getElementById('hitokoto').innerText = `\( {data.hitokoto} —— 「 \){data.from}」`;
             })
-            .catch(e => console.error("一言获取失败:", e));
+            .catch(e => {
+                console.error("一言获取失败:", e);
+                document.getElementById('hitokoto').innerText = "跨越星辰，只为与你相遇。";
+            });
     }
 
     // 3. 解析 YAML 并渲染导航
@@ -233,6 +264,15 @@
         initBackground();
         getHitokoto();
         loadNav();
+
+        // 点击一言框刷新效果
+        const hitokotoEl = document.getElementById('hitokoto');
+        hitokotoEl.addEventListener('click', () => {
+            hitokotoEl.style.opacity = '0.6';
+            getHitokoto().finally(() => {
+                hitokotoEl.style.opacity = '1';
+            });
+        });
     });
 </script>
 
