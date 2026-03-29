@@ -26,7 +26,7 @@
 
         * { 
             box-sizing: border-box; 
-            -webkit-tap-highlight-color: transparent; /* 新增：彻底禁用移动端长按蓝色阴影 */
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -34,31 +34,29 @@
             font-family: 'PingFang SC', 'Helvetica Neue', 'Microsoft YaHei', sans-serif;
             color: var(--text-main);
             min-height: 100vh;
-            background-color: #1a1a1a;
-            background-position: center center;
-            background-attachment: fixed;
-            background-repeat: no-repeat;
-            background-size: cover;
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 40px 20px 60px 20px;
             position: relative;
-            overflow: hidden;
         }
 
-        /* 背景层：等待完全加载后再渐变弹出 */
+        /* 背景层 */
         .fixed-bg {
             position: fixed;
-            inset: 0;
-            z-index: -2;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
             background-color: #1a1a1a;
             background-position: center center;
             background-repeat: no-repeat;
             background-size: cover;
+            background-attachment: fixed;
             opacity: 0;
-            transition: opacity 0.9s cubic-bezier(0.25, 0.1, 0.25, 1); /* 更柔和的渐变弹出 */
+            transition: opacity 0.9s cubic-bezier(0.25, 0.1, 0.25, 1);
             will-change: opacity;
+            z-index: -2;
         }
 
         body::before {
@@ -136,17 +134,14 @@
             text-decoration: none; color: inherit;
             display: flex; align-items: center; gap: 16px; 
             border: 1px solid rgba(255,255,255,0.1);
-            transition: background 0.3s ease, transform 0.12s ease; /* 点按回弹比一言框稍快 */
+            transition: background 0.3s ease, transform 0.12s ease;
             opacity: 0;
             transform: translateY(30px);
             animation: fadeInUp 0.6s forwards;
             will-change: transform, opacity, background;
         }
         @keyframes fadeInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .card:hover { background: var(--card-hover); }
@@ -205,13 +200,9 @@
 </div>
 
 <script>
-    // 设备检测（确认 API 正确）
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const bgUrl = isMobile 
-        ? 'https://api.yppp.net/pe.php'   // 移动端（已确认有效）
-        : 'https://api.yppp.net/pc.php';  // 桌面端（已确认有效）
+    const bgUrl = isMobile ? 'https://api.yppp.net/pe.php' : 'https://api.yppp.net/pc.php';
 
-    // 1. 背景：等待完全加载后再渐变弹出（不再逐渐加载）
     function initBackground() {
         const bgLayer = document.getElementById('bg-layer');
         const downloadBtn = document.getElementById('download-link');
@@ -221,31 +212,55 @@
         
         img.onload = () => {
             bgLayer.style.backgroundImage = `url('${img.src}')`;
-            bgLayer.style.opacity = '1';           // 完全加载后才弹出
+            bgLayer.style.opacity = '1';
             downloadBtn.href = img.src;
         };
         
         img.onerror = () => {
-            console.error("背景加载失败，使用备用");
             bgLayer.style.backgroundImage = `url('${bgUrl}')`;
             bgLayer.style.opacity = '1';
         };
     }
 
-    // 2. 一言（已按官方文档优化，增加 encode=json 防止潜在加载问题）
-    function getHitokoto() {
-        return fetch('https://v1.hitokoto.cn?encode=json&c=a&c=b&c=c')  // 官方推荐写法
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById('hitokoto').innerText = `\( {data.hitokoto} —— 「 \){data.from}」`;
-            })
-            .catch(e => {
-                console.error("一言获取失败:", e);
-                document.getElementById('hitokoto').innerText = "跨越星辰，只为与你相遇。";
-            });
+    function preventKeyboardZoom() {
+        let initialHeight = window.innerHeight;
+        window.addEventListener('resize', () => {
+            const currentHeight = window.innerHeight;
+            const bgLayer = document.getElementById('bg-layer');
+            if (currentHeight < initialHeight - 150) {
+                bgLayer.style.height = initialHeight + 'px';
+            } else {
+                bgLayer.style.height = '100vh';
+            }
+        });
     }
 
-    // 3. 解析 YAML 并渲染导航
+    // ✅ 已修复：使用正确的模板字面量（反引号 ` `）
+    function getHitokoto() {
+        const hElem = document.getElementById('hitokoto');
+        const originalText = hElem.innerText;
+        hElem.style.opacity = '0.4';
+        
+        return fetch('https://v1.hitokoto.cn?c=a&max_length=25', { 
+            method: 'GET',
+            cache: 'no-cache'
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Network response was not ok');
+            return res.json();
+        })
+        .then(data => {
+            // 正确写法：必须使用反引号 ` ` 才能插入变量
+            hElem.innerText = `\( {data.hitokoto} —— 「 \){data.from}」`;
+            hElem.style.opacity = '1';
+        })
+        .catch(e => {
+            console.error("一言获取失败:", e);
+            hElem.innerText = "跨越星辰，只为与你相遇。";
+            hElem.style.opacity = '1';
+        });
+    }
+
     async function loadNav() {
         try {
             const response = await fetch('./config.yml');
@@ -284,19 +299,16 @@
         }
     }
 
-    // 统一入口
     window.addEventListener('DOMContentLoaded', () => {
         initBackground();
-        getHitokoto();
+        getHitokoto();           // 初始加载一言
         loadNav();
+        preventKeyboardZoom();
 
-        // 点击一言框刷新
+        // 点击刷新一言
         const hitokotoEl = document.getElementById('hitokoto');
         hitokotoEl.addEventListener('click', () => {
-            hitokotoEl.style.opacity = '0.6';
-            getHitokoto().finally(() => {
-                hitokotoEl.style.opacity = '1';
-            });
+            getHitokoto();
         });
     });
 </script>
