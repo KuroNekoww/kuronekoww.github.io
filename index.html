@@ -7,221 +7,223 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
     <style>
         :root {
-            /* ☀️ 浅色模式 */
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.3);
             --text-main: #1e293b;
-            --text-muted: #64748b;
-            --primary-color: #3b82f6;
-            --border-color: #e2e8f0;
-            --hover-shadow: rgba(59, 130, 246, 0.12);
-            --card-hover-border: #bfdbfe;
+            --text-muted: #475569;
+            --accent-color: #0078d4; /* Bing Blue */
+            --bg-overlay: rgba(248, 250, 252, 0.4);
         }
 
-        /* 🌙 自动触发深色模式 */
         @media (prefers-color-scheme: dark) {
             :root {
-                --bg-color: #0f172a;
-                --card-bg: #1e293b;
+                --glass-bg: rgba(15, 23, 42, 0.7);
+                --glass-border: rgba(255, 255, 255, 0.1);
                 --text-main: #f1f5f9;
                 --text-muted: #94a3b8;
-                --primary-color: #60a5fa;
-                --border-color: #334155;
-                --hover-shadow: rgba(0, 0, 0, 0.3);
-                --card-hover-border: #475569;
+                --bg-overlay: rgba(15, 23, 42, 0.6);
             }
         }
 
+        /* 背景设置 */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
             margin: 0;
-            padding: 40px 20px;
-            line-height: 1.6;
-            transition: background-color 0.3s ease, color 0.3s ease;
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            color: var(--text-main);
+            /* 使用你提供的 ACG API */
+            background: url('https://api.yeqing.net/api/api.php') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* 磨砂玻璃叠加层 */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-overlay);
+            backdrop-filter: blur(8px);
+            z-index: -1;
         }
 
         .container {
-            max-width: 1100px;
-            margin: 0 auto;
+            width: 100%;
+            max-width: 900px;
+            padding: 60px 20px;
+            z-index: 1;
         }
 
+        /* 头部样式 */
         .header {
             text-align: center;
-            margin-bottom: 60px;
-            animation: fadeInDown 0.8s ease-out;
+            margin-bottom: 40px;
         }
 
         .header h1 {
-            font-size: 2.6rem;
+            font-size: 2.2rem;
             font-weight: 800;
             margin: 0;
-            letter-spacing: -1px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
-        .header p {
-            color: var(--text-muted);
-            margin-top: 12px;
-            font-size: 1.1rem;
+        /* Bing 搜索框 */
+        .search-container {
+            margin: 30px auto 50px;
+            max-width: 600px;
+            position: relative;
         }
 
-        .category {
-            margin-bottom: 50px;
-            animation: fadeInUp 0.6s ease-out;
-        }
-
-        .category-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin-bottom: 24px;
+        .search-form {
             display: flex;
             align-items: center;
-            gap: 12px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 8px 16px;
+            border-radius: 50px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
         }
 
-        .category-title::after {
-            content: "";
+        .search-form:focus-within {
+            transform: scale(1.02);
+            border-color: var(--accent-color);
+            background: white;
+        }
+
+        .bing-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 12px;
+        }
+
+        .search-input {
             flex: 1;
-            height: 1px;
-            background-color: var(--border-color);
+            border: none;
+            background: transparent;
+            color: var(--text-main);
+            font-size: 1.1rem;
+            outline: none;
+            padding: 8px 0;
+        }
+
+        /* 导航卡片布局 */
+        .category { margin-bottom: 40px; }
+        .category-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            padding-left: 10px;
+            border-left: 4px solid var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
         }
 
         .card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            padding: 22px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 15px;
             text-decoration: none;
             color: inherit;
             display: flex;
-            align-items: flex-start;
-            gap: 16px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
-            border: 1px solid var(--border-color);
-            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            flex-direction: column;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 30px var(--hover-shadow);
-            border-color: var(--card-hover-border);
+            background: var(--accent-color);
+            border-color: var(--accent-color);
         }
 
-        .icon {
-            font-size: 2.2rem;
-            background: var(--bg-color);
-            min-width: 52px;
-            height: 52px;
+        .card:hover * { color: white !important; }
+
+        .card-top {
             display: flex;
             align-items: center;
-            justify-content: center;
-            border-radius: 12px;
-            transition: background-color 0.3s ease;
+            gap: 12px;
+            margin-bottom: 8px;
         }
 
-        .info {
-            flex: 1;
-            overflow: hidden;
-        }
+        .icon { font-size: 1.5rem; }
+        .name { font-weight: 600; font-size: 1rem; }
+        .desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
 
-        .info h3 {
-            margin: 0 0 6px 0;
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .info p {
-            margin: 0;
-            font-size: 0.88rem;
-            color: var(--text-muted);
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        /* 动画效果 */
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         @media (max-width: 600px) {
-            .grid { grid-template-columns: 1fr; }
-            .header h1 { font-size: 2rem; }
+            .grid { grid-template-columns: 1fr 1fr; }
+            .header h1 { font-size: 1.6rem; }
         }
     </style>
 </head>
 <body>
 
+<div class="overlay"></div>
+
 <div class="container">
-    <div class="header">
+    <header class="header">
         <h1 id="page-title">山本小面包🍞的私人导航页</h1>
-        <p id="page-subtitle">正在读取配置...</p>
+    </header>
+
+    <div class="search-container">
+        <form class="search-form" action="https://www.bing.com/search" method="get" target="_blank">
+            <svg class="bing-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M5.54 2L3 3.65V18.15L10.3 22.25V16.32L15.3 13.51V18.15L18.3 16.51V6.93L5.54 2Z" fill="#0078D4"/>
+                <path d="M10.3 10.74L15.3 13.51V7.99L10.3 5.21V10.74Z" fill="#00A4EF"/>
+            </svg>
+            <input type="text" name="q" class="search-input" placeholder="输入搜索内容..." autocomplete="off">
+        </form>
     </div>
 
-    <div id="nav-container"></div>
+    <main id="nav-container"></main>
 </div>
 
 <script>
     async function init() {
-        const navContainer = document.getElementById('nav-container');
         try {
             const response = await fetch('./config.yml');
-            if (!response.ok) throw new Error('未找到 config.yml 配置文件');
-            
             const yamlText = await response.text();
             const config = jsyaml.load(yamlText);
             
-            render(config);
+            document.title = config.header.title;
+            document.getElementById('page-title').innerText = config.header.title;
+
+            const container = document.getElementById('nav-container');
+            config.categories.forEach(cat => {
+                const section = document.createElement('section');
+                section.className = 'category';
+                section.innerHTML = `
+                    <div class="category-title">${cat.name}</div>
+                    <div class="grid">
+                        ${cat.links.map(link => `
+                            <a href="${link.url}" class="card" target="_blank">
+                                <div class="card-top">
+                                    <span class="icon">${link.icon || '🔗'}</span>
+                                    <span class="name">${link.name}</span>
+                                </div>
+                                <div class="desc">${link.desc || ''}</div>
+                            </a>
+                        `).join('')}
+                    </div>
+                `;
+                container.appendChild(section);
+            });
         } catch (err) {
-            navContainer.innerHTML = `<p style="text-align:center; color:red;">加载失败: ${err.message}</p>`;
+            console.error(err);
         }
     }
-
-    function render(data) {
-        // 更新标题
-        if (data.header) {
-            document.title = data.header.title || document.title;
-            document.getElementById('page-title').innerText = data.header.title;
-            document.getElementById('page-subtitle').innerText = data.header.subtitle || '';
-        }
-
-        const container = document.getElementById('nav-container');
-        container.innerHTML = '';
-
-        data.categories.forEach(cat => {
-            const section = document.createElement('section');
-            section.className = 'category';
-            
-            section.innerHTML = `
-                <div class="category-title">${cat.name}</div>
-                <div class="grid">
-                    ${cat.links.map(link => `
-                        <a href="${link.url}" class="card" target="_blank" rel="noopener">
-                            <div class="icon">${link.icon || '🔗'}</div>
-                            <div class="info">
-                                <h3>${link.name}</h3>
-                                <p>${link.desc || ''}</p>
-                            </div>
-                        </a>
-                    `).join('')}
-                </div>
-            `;
-            container.appendChild(section);
-        });
-    }
-
     window.addEventListener('DOMContentLoaded', init);
 </script>
 
