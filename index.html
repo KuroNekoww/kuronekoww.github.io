@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>山本小面包🍞的私人导航页</title>
+    <title>山本小面包🍞的导航站</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
     <style>
         :root {
-            /* 基础色彩定义 */
             --glass-bg: rgba(255, 255, 255, 0.7);
             --text-main: #1e293b;
             --text-muted: #475569;
             --accent-color: #0078d4;
-            --download-link: #ff6b6b; /* 下载链接的高亮色 */
+            --download-link: #ff6b6b;
             --card-hover: rgba(255, 255, 255, 0.9);
         }
 
@@ -25,14 +24,16 @@
             }
         }
 
-        * { box-sizing: border-box; }
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; /* 新增：彻底禁用移动端长按蓝色阴影 */
+        }
 
         body {
             margin: 0;
             font-family: 'PingFang SC', 'Helvetica Neue', 'Microsoft YaHei', sans-serif;
             color: var(--text-main);
             min-height: 100vh;
-            /* 背景初始化：居中、固定、不重复 */
             background-color: #1a1a1a;
             background-position: center center;
             background-attachment: fixed;
@@ -42,27 +43,41 @@
             flex-direction: column;
             align-items: center;
             padding: 40px 20px 60px 20px;
-            transition: background 0.8s ease-in-out; /* 背景切换平滑效果 */
+            position: relative;
+            overflow: hidden;
         }
 
-        /* 蒙层：提升文字辨识度 */
+        /* 背景层：等待完全加载后再渐变弹出 */
+        .fixed-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background-color: #1a1a1a;
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            opacity: 0;
+            transition: opacity 0.9s cubic-bezier(0.25, 0.1, 0.25, 1); /* 更柔和的渐变弹出 */
+            will-change: opacity;
+        }
+
         body::before {
             content: "";
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
+            inset: 0;
             background: rgba(0, 0, 0, 0.25);
             z-index: -1;
         }
 
         .container { width: 100%; max-width: 900px; z-index: 1; flex: 1; }
 
-        /* 头部与一言 */
         .header { text-align: center; margin-bottom: 40px; }
         .header h1 { 
             font-size: 2.8rem; margin: 0; color: #fff; 
             text-shadow: 0 4px 15px rgba(0,0,0,0.5); 
             letter-spacing: -1px;
         }
+
         #hitokoto { 
             display: inline-block;
             margin-top: 18px; padding: 10px 24px;
@@ -76,13 +91,13 @@
             border: 1px solid rgba(255,255,255,0.1);
             cursor: pointer;
             transition: transform 0.15s ease, opacity 0.2s ease;
+            will-change: transform, opacity;
         }
         #hitokoto:active {
             transform: scale(0.92);
             opacity: 0.8;
         }
 
-        /* Bing 搜索框设计 - 只有激活时才有高亮边框 */
         .search-area { margin-bottom: 50px; display: flex; justify-content: center; width: 100%; }
         .search-box {
             display: flex; align-items: center; 
@@ -105,7 +120,6 @@
             color: var(--text-main); font-size: 1.1rem; padding: 10px 0; outline: none;
         }
 
-        /* 分类标题 */
         .category { margin-bottom: 45px; }
         .category-title {
             font-size: 1.25rem; font-weight: 800; margin-bottom: 20px;
@@ -113,7 +127,6 @@
             padding-left: 12px; border-left: 5px solid var(--accent-color);
         }
 
-        /* 卡片网格布局 - 已移除平移效果（translateY），只保留点击放缩 + 桌面图标倾斜 */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
 
         .card {
@@ -123,12 +136,20 @@
             text-decoration: none; color: inherit;
             display: flex; align-items: center; gap: 16px; 
             border: 1px solid rgba(255,255,255,0.1);
-            transition: background 0.3s ease;
+            transition: background 0.3s ease, transform 0.12s ease; /* 点按回弹比一言框稍快 */
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.6s forwards;
+            will-change: transform, opacity, background;
         }
-        .card:hover { 
-            background: var(--card-hover); 
-            /* 平移效果已完全移除 */
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
+
+        .card:hover { background: var(--card-hover); }
         .card:active { 
             transform: scale(0.95); 
             background: var(--card-hover);
@@ -137,19 +158,10 @@
             font-size: 2rem; 
             min-width: 45px; 
             text-align: center; 
-            transition: transform 0.3s ease;
         }
         .card .info h3 { margin: 0; font-size: 1.05rem; font-weight: 700; }
         .card .info p { margin: 6px 0 0; font-size: 0.85rem; opacity: 0.85; line-height: 1.4; }
 
-        /* 桌面端鼠标悬停时图标额外倾斜15度（保留先前版本风格） */
-        @media (hover: hover) {
-            .card:hover .icon { 
-                transform: rotate(15deg) scale(1.1); 
-            }
-        }
-
-        /* 底部下载文字 */
         .footer-download {
             text-align: center; margin-top: 40px; padding: 15px 30px;
             background: var(--glass-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
@@ -170,9 +182,11 @@
 </head>
 <body>
 
+<div class="fixed-bg" id="bg-layer"></div>
+
 <div class="container">
     <div class="header">
-        <h1 id="page-title">山本小面包🍞</h1>
+        <h1 id="page-title">山本小面包🍞的导航站</h1>
         <div id="hitokoto">正在连接异世界...</div>
     </div>
 
@@ -191,25 +205,36 @@
 </div>
 
 <script>
-    // 1. 初始化背景：捕获真实图片 URL
+    // 设备检测（确认 API 正确）
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const bgUrl = isMobile 
+        ? 'https://api.yppp.net/pe.php'   // 移动端（已确认有效）
+        : 'https://api.yppp.net/pc.php';  // 桌面端（已确认有效）
+
+    // 1. 背景：等待完全加载后再渐变弹出（不再逐渐加载）
     function initBackground() {
-        const bgUrl = 'https://api.yppp.net/pc.php';
+        const bgLayer = document.getElementById('bg-layer');
         const downloadBtn = document.getElementById('download-link');
         
-        // 预加载图片以获取 302 重定向后的真实路径
-        fetch(bgUrl).then(res => {
-            if (res.ok) {
-                const realUrl = res.url;
-                document.body.style.backgroundImage = `url('${realUrl}')`;
-                // 同步下载链接
-                downloadBtn.href = realUrl;
-            }
-        }).catch(e => console.error("背景加载失败:", e));
+        const img = new Image();
+        img.src = bgUrl;
+        
+        img.onload = () => {
+            bgLayer.style.backgroundImage = `url('${img.src}')`;
+            bgLayer.style.opacity = '1';           // 完全加载后才弹出
+            downloadBtn.href = img.src;
+        };
+        
+        img.onerror = () => {
+            console.error("背景加载失败，使用备用");
+            bgLayer.style.backgroundImage = `url('${bgUrl}')`;
+            bgLayer.style.opacity = '1';
+        };
     }
 
-    // 2. 获取一言（支持多次刷新）
+    // 2. 一言（已按官方文档优化，增加 encode=json 防止潜在加载问题）
     function getHitokoto() {
-        return fetch('https://v1.hitokoto.cn?c=a&c=b&c=c')
+        return fetch('https://v1.hitokoto.cn?encode=json&c=a&c=b&c=c')  // 官方推荐写法
             .then(res => res.json())
             .then(data => {
                 document.getElementById('hitokoto').innerText = `\( {data.hitokoto} —— 「 \){data.from}」`;
@@ -235,14 +260,14 @@
             const container = document.getElementById('nav-container');
             container.innerHTML = '';
 
-            config.categories.forEach(cat => {
+            config.categories.forEach((cat, index) => {
                 const section = document.createElement('div');
                 section.className = 'category';
                 section.innerHTML = `
                     <div class="category-title">${cat.name}</div>
                     <div class="grid">
                         ${cat.links.map(link => `
-                            <a href="${link.url}" class="card" target="_blank">
+                            <a href="${link.url}" class="card" target="_blank" style="animation-delay: ${index * 80 + 100}ms">
                                 <div class="icon">${link.icon || '🔗'}</div>
                                 <div class="info">
                                     <h3>${link.name}</h3>
@@ -265,7 +290,7 @@
         getHitokoto();
         loadNav();
 
-        // 点击一言框刷新效果
+        // 点击一言框刷新
         const hitokotoEl = document.getElementById('hitokoto');
         hitokotoEl.addEventListener('click', () => {
             hitokotoEl.style.opacity = '0.6';
