@@ -116,8 +116,7 @@
             color: var(--text-main); font-size: 1.1rem; padding: 10px 0; outline: none;
         }
 
-        /* ==================== 导航栏动画 完全参照你给出的代码 ==================== */
-        /* 4. 列表渐次入场动画 */
+        /* 导航栏动画逻辑保持不变（完全参照你给出的代码） */
         .category { 
             margin-bottom: 45px; 
             animation: fadeInOut 1s ease-out forwards;
@@ -125,10 +124,11 @@
 
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
 
-        /* 5. 核心：卡片交互 */
+        /* 核心：恢复导航框的模糊效果 */
         .card {
             background: var(--glass-bg); 
-            backdrop-filter: blur(15px);
+            backdrop-filter: blur(15px);           /* 已恢复毛玻璃模糊效果 */
+            -webkit-backdrop-filter: blur(15px);   /* 兼容 Safari */
             border-radius: 20px; padding: 20px; 
             display: flex; align-items: center; gap: 16px; 
             border: 1px solid rgba(255,255,255,0.1);
@@ -139,7 +139,7 @@
             color: inherit;
         }
 
-        /* 桌面端悬浮效果 */
+        /* 桌面端悬浮效果（保持不变） */
         @media (hover: hover) {
             .card:hover { 
                 transform: translateY(-8px) scale(1.02); 
@@ -155,18 +155,11 @@
             .card:hover::after { left: 100%; }
         }
 
-        /* 移动端点击反馈 */
+        /* 移动端点击反馈（保持不变） */
         .card:active { transform: scale(0.96); opacity: 0.8; }
 
         .icon { font-size: 2.2rem; transition: transform 0.3s ease; }
         .card:hover .icon { transform: rotate(15deg) scale(1.1); }
-
-        /* 动画定义 */
-        @keyframes fadeInOut { 
-            from { opacity: 0; transform: translateY(20px); } 
-            to { opacity: 1; transform: translateY(0); } 
-        }
-        /* ==================== 导航栏动画结束 ==================== */
 
         .footer-download {
             text-align: center; margin-top: 40px; padding: 15px 30px;
@@ -179,6 +172,12 @@
             font-weight: 800; margin-left: 5px; transition: 0.2s;
         }
         .footer-download a:hover { text-decoration: underline; opacity: 0.8; }
+
+        /* 动画定义（保持不变） */
+        @keyframes fadeInOut { 
+            from { opacity: 0; transform: translateY(20px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
 
         @media (max-width: 600px) { 
             .grid { grid-template-columns: 1fr; } 
@@ -273,15 +272,15 @@
             config.categories.forEach((cat, index) => {
                 const section = document.createElement('div');
                 section.className = 'category';
-                section.style.animationDelay = `${index * 0.1}s`;   /* 参照参考代码 */
+                section.style.animationDelay = `${index * 0.1}s`;
                 section.innerHTML = `
                     <div class="category-title">${cat.name}</div>
                     <div class="grid">${cat.links.map(link => `
                         <a href="${link.url}" class="card" target="_blank">
                             <div class="icon">${link.icon || '🔗'}</div>
                             <div class="info">
-                                <h3 style="margin:0; font-size:1.05rem;">${link.name}</h3>
-                                <p style="margin:5px 0 0; font-size:0.85rem; opacity:0.8;">${link.desc || ''}</p>
+                                <h3>${link.name}</h3>
+                                <p>${link.desc || ''}</p>
                             </div>
                         </a>
                     `).join('')}</div>`;
