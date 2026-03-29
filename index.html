@@ -38,7 +38,6 @@
             flex-direction: column;
             align-items: center;
             padding: 40px 20px 60px 20px;
-            /* 桌面端平滑滚动 */
             scroll-behavior: smooth;
         }
 
@@ -53,14 +52,13 @@
 
         .container { width: 100%; max-width: 900px; z-index: 1; flex: 1; }
 
-        /* 1. 标题入场动画 */
+        .header { text-align: center; }
         .header h1 { 
             font-size: 2.8rem; margin: 0; color: #fff; 
             text-shadow: 0 4px 20px rgba(0,0,0,0.6);
             animation: slideDown 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        /* 2. 磁吸感一言 */
         #hitokoto { 
             display: inline-block;
             margin-top: 18px; padding: 10px 24px;
@@ -70,37 +68,48 @@
             cursor: pointer;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             border: 1px solid rgba(255,255,255,0.2);
+            font-size: 0.95rem;
         }
-        #hitokoto:hover { transform: scale(1.05); box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
-        #hitokoto:active { transform: scale(0.95); }
 
-        /* 3. 搜索框呼吸效果 */
-        .search-area { margin: 40px 0 50px 0; }
+        /* --- 搜索框修复部分 --- */
+        .search-area { margin: 40px 0 50px 0; display: flex; justify-content: center; }
         .search-box {
             display: flex; align-items: center; 
             background: var(--glass-bg);
             backdrop-filter: blur(20px);
-            border-radius: 50px; padding: 8px 25px;
+            border-radius: 50px; padding: 5px 20px;
             border: 1px solid rgba(255,255,255,0.3);
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             transition: all 0.3s ease;
+            width: 100%; max-width: 550px;
         }
         .search-box:focus-within { 
             transform: translateY(-4px); 
             box-shadow: 0 20px 40px rgba(0,0,0,0.4);
             border-color: var(--accent-color);
-            background: var(--card-hover);
+        }
+        /* 修复图标过大问题 */
+        .search-box img { 
+            width: 24px; 
+            height: 24px; 
+            object-fit: contain; 
+            margin-right: 12px; 
+            flex-shrink: 0; /* 防止被挤压 */
+        }
+        .search-box input {
+            flex: 1; border: none; background: transparent;
+            color: var(--text-main); font-size: 1.1rem; padding: 12px 0; outline: none;
         }
 
-        /* 4. 列表渐次入场动画 */
-        .category { 
-            margin-bottom: 45px; 
-            animation: fadeInOut 1s ease-out forwards;
+        /* --- 列表与卡片 --- */
+        .category { margin-bottom: 45px; animation: fadeInUp 1s ease-out forwards; }
+        .category-title {
+            font-size: 1.25rem; font-weight: 800; margin-bottom: 20px;
+            color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            padding-left: 12px; border-left: 5px solid var(--accent-color);
         }
-
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
 
-        /* 5. 核心：卡片交互 */
         .card {
             background: var(--glass-bg); 
             backdrop-filter: blur(15px);
@@ -108,45 +117,24 @@
             display: flex; align-items: center; gap: 16px; 
             border: 1px solid rgba(255,255,255,0.1);
             transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-            position: relative;
-            overflow: hidden;
-            text-decoration: none;
-            color: inherit;
+            text-decoration: none; color: inherit;
         }
-
-        /* 桌面端悬浮效果 */
-        @media (hover: hover) {
-            .card:hover { 
-                transform: translateY(-8px) scale(1.02); 
-                background: var(--card-hover);
-                border-color: var(--accent-color);
-                box-shadow: 0 15px 35px rgba(0,0,0,0.3);
-            }
-            .card::after {
-                content: ""; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-                transition: 0.5s;
-            }
-            .card:hover::after { left: 100%; }
+        .card:hover { 
+            transform: translateY(-8px); 
+            background: var(--card-hover);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
         }
+        .icon { font-size: 2.2rem; min-width: 45px; text-align: center; }
 
-        /* 移动端点击反馈 */
-        .card:active { transform: scale(0.96); opacity: 0.8; }
-
-        .icon { font-size: 2.2rem; transition: transform 0.3s ease; }
-        .card:hover .icon { transform: rotate(15deg) scale(1.1); }
-
-        /* 6. 底部下载按钮 */
+        /* --- 底部区域 --- */
         .footer-download {
-            margin-top: 40px; padding: 15px 30px;
+            margin-top: auto; padding: 15px 30px;
             background: var(--glass-bg); backdrop-filter: blur(12px);
-            border-radius: 40px; transition: 0.3s;
+            border-radius: 40px; text-align: center;
         }
-        .footer-download:hover { transform: translateY(-2px); background: var(--card-hover); }
 
-        /* 动画定义 */
         @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeInOut { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .header h1 { font-size: 2.2rem; } }
     </style>
@@ -156,13 +144,13 @@
 <div class="container">
     <div class="header">
         <h1 id="page-title">山本小面包🍞</h1>
-        <div id="hitokoto" title="点击刷新一言">正在同步异世界信号...</div>
+        <div id="hitokoto" title="点击刷新一言">连接异世界中...</div>
     </div>
 
     <div class="search-area">
         <form class="search-box" action="https://www.bing.com/search" method="get" target="_blank">
             <img src="https://image.pngaaa.com/445/5409445-middle.png" alt="Bing">
-            <input type="text" name="q" placeholder="在此输入搜索内容..." autocomplete="off">
+            <input type="text" name="q" placeholder="在 Bing 中搜索..." autocomplete="off">
         </form>
     </div>
 
@@ -174,16 +162,7 @@
 </div>
 
 <script>
-    // 1. 背景视差移动 (桌面端优化)
-    if (window.innerWidth > 1024) {
-        window.addEventListener('mousemove', (e) => {
-            const moveX = (e.clientX - window.innerWidth / 2) * 0.01;
-            const moveY = (e.clientY - window.innerHeight / 2) * 0.01;
-            document.body.style.backgroundPosition = `calc(50% + ${moveX}px) calc(50% + ${moveY}px)`;
-        });
-    }
-
-    // 2. 增强背景加载
+    // 背景处理
     function initBackground() {
         const bgUrl = 'https://api.yppp.net/pc.php';
         fetch(bgUrl).then(res => {
@@ -194,20 +173,26 @@
         });
     }
 
-    // 3. 点击一言刷新
+    // 视差效果
+    if (window.innerWidth > 1024) {
+        window.addEventListener('mousemove', (e) => {
+            const moveX = (e.clientX - window.innerWidth / 2) * 0.005;
+            const moveY = (e.clientY - window.innerHeight / 2) * 0.005;
+            document.body.style.backgroundPosition = `calc(50% + ${moveX}px) calc(50% + ${moveY}px)`;
+        });
+    }
+
+    // 一言刷新
     function getHitokoto() {
-        const hElem = document.getElementById('hitokoto');
-        hElem.style.opacity = 0.5;
         fetch('https://v1.hitokoto.cn?c=a&c=b&c=c')
             .then(res => res.json())
             .then(data => {
-                hElem.innerText = `${data.hitokoto} —— 「${data.from}」`;
-                hElem.style.opacity = 1;
+                document.getElementById('hitokoto').innerText = `${data.hitokoto} —— 「${data.from}」`;
             });
     }
     document.getElementById('hitokoto').onclick = getHitokoto;
 
-    // 4. 解析 YAML (逻辑保持不变)
+    // 加载配置
     async function loadNav() {
         try {
             const response = await fetch('./config.yml');
@@ -220,14 +205,14 @@
             config.categories.forEach((cat, index) => {
                 const section = document.createElement('div');
                 section.className = 'category';
-                section.style.animationDelay = `${index * 0.1}s`; // 渐次入场
+                section.style.animationDelay = `${index * 0.1}s`;
                 section.innerHTML = `
-                    <div class="category-title" style="color:#fff; font-weight:bold; margin-bottom:15px; text-shadow:0 2px 10px rgba(0,0,0,0.5);">${cat.name}</div>
+                    <div class="category-title">${cat.name}</div>
                     <div class="grid">${cat.links.map(link => `
                         <a href="${link.url}" class="card" target="_blank">
                             <div class="icon">${link.icon || '🔗'}</div>
                             <div class="info">
-                                <h3 style="margin:0; font-size:1.05rem;">${link.name}</h3>
+                                <h3 style="margin:0;">${link.name}</h3>
                                 <p style="margin:5px 0 0; font-size:0.85rem; opacity:0.8;">${link.desc || ''}</p>
                             </div>
                         </a>
