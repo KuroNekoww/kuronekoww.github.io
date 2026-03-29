@@ -217,7 +217,7 @@
         try {
             const res = await fetch('https://v1.hitokoto.cn?c=a&c=b&c=c');
             const data = await res.json();
-            hElem.innerText = `\( {data.hitokoto} —— 「 \){data.from}」`;
+            hElem.innerText = `${data.hitokoto} —— 「${data.from}」`;
         } catch (e) {
             hElem.innerText = "跨越星辰，只为与你相遇。";
         }
