@@ -34,7 +34,6 @@
             padding: 40px 20px 60px; overflow-x: hidden;
         }
 
-        /* 👑 背景层：通过 JS 锁定 px 高度，彻底解决键盘弹出时的闪烁和缩放 */
         .fixed-bg {
             position: fixed;
             top: 0; left: 0;
@@ -68,12 +67,10 @@
             text-shadow: 0 4px 15px rgba(0,0,0,0.5); 
         }
 
-        /* 👑 这里的样式已从全局 .glass-style 移动到具体 ID 内部进行重复定义 */
         #hitokoto { 
             display: inline-block; margin-top: 18px; padding: 12px 24px;
             border-radius: 30px; font-size: 0.95rem; cursor: pointer;
             transition: transform 0.2s;
-            /* 注入玻璃效果 */
             background: var(--glass);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
@@ -87,7 +84,6 @@
             display: flex; align-items: center; width: 100%; max-width: 580px; 
             border-radius: 50px; padding: 6px 22px;
             transition: border-color 0.3s;
-            /* 注入玻璃效果 */
             background: var(--glass);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
@@ -108,16 +104,12 @@
         }
 
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
-        
-        /* 💎 .card 保持原样，不作修改 */
+
+        /* 卡片基础样式（动画保持不变） */
         .card {
             border-radius: 20px; padding: 20px; 
             display: flex; align-items: center; gap: 16px; 
             transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-            background: var(--glass);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
             position: relative;
             overflow: hidden;
             text-decoration: none;
@@ -134,7 +126,6 @@
         .footer-download {
             text-align: center; margin-top: auto; padding: 15px 35px;
             border-radius: 40px; font-size: 0.9rem;
-            /* 注入玻璃效果 */
             background: var(--glass);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
@@ -197,7 +188,7 @@
     async function getHitokoto() {
         const hElem = document.getElementById('hitokoto');
         try {
-            const res = await fetch('https://v1.hitokoto.cn?c=a&c=b&max_length=24');
+            const res = await fetch('https://v1.hitokoto.cn?c=a&max_length=25');
             const data = await res.json();
             hElem.innerText = `${data.hitokoto} —— 「${data.from}」`;
         } catch (e) { hElem.innerText = "跨越星辰，只为与你相遇。"; }
@@ -210,25 +201,28 @@
             const yamlText = await response.text();
             const config = jsyaml.load(yamlText);
 
-            // 1. 适配标题：更新 ID 为 page-title 的元素
             if (config.header) {
                 const titleElem = document.getElementById('page-title');
                 if (titleElem) titleElem.innerText = config.header.title;
             }
 
-            // 2. 清空容器并使用参考逻辑进行重构
             container.innerHTML = '';
             
             config.categories.forEach((cat, index) => {
                 const section = document.createElement('div');
                 section.className = 'category';
-                // 渐次入场动画
                 section.style.animationDelay = `${index * 0.1}s`; 
                 
                 section.innerHTML = `
                     <div class="category-title">${cat.name}</div>
                     <div class="grid">${cat.links.map(link => `
-                        <a href="${link.url}" class="card" target="_blank">
+                        <a href="${link.url}" class="card" target="_blank" style="
+                            background: var(--glass);
+                            backdrop-filter: blur(20px);
+                            -webkit-backdrop-filter: blur(20px);
+                            border: 1px solid var(--glass-border);
+                            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+                        ">
                             <div class="icon">${link.icon || '🔗'}</div>
                             <div class="info">
                                 <h3 style="margin:0; font-size:1.05rem;">${link.name}</h3>
