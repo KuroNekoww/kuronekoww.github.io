@@ -204,21 +204,27 @@
     }
 
     async function loadNav() {
+        const container = document.getElementById('nav-container');
         try {
             const response = await fetch('./config.yml');
             const yamlText = await response.text();
             const config = jsyaml.load(yamlText);
-            
-            // 适配标题逻辑
-            if (config.header) document.getElementById('page-title').innerText = config.header.title;
 
-            const container = document.getElementById('nav-container');
+            // 1. 适配标题：更新 ID 为 page-title 的元素
+            if (config.header) {
+                const titleElem = document.getElementById('page-title');
+                if (titleElem) titleElem.innerText = config.header.title;
+            }
+
+            // 2. 清空容器并使用参考逻辑进行重构
             container.innerHTML = '';
             
             config.categories.forEach((cat, index) => {
                 const section = document.createElement('div');
                 section.className = 'category';
+                // 渐次入场动画
                 section.style.animationDelay = `${index * 0.1}s`; 
+                
                 section.innerHTML = `
                     <div class="category-title">${cat.name}</div>
                     <div class="grid">${cat.links.map(link => `
@@ -230,10 +236,14 @@
                             </div>
                         </a>
                     `).join('')}</div>`;
+                
                 container.appendChild(section);
             });
-        } catch (e) { console.error(e); }
-                }
+        } catch (e) { 
+            console.error("YAML加载失败:", e); 
+            container.innerHTML = '<p style="color:#fff; text-align:center;">配置加载失败</p>';
+        }
+    }
     
     window.addEventListener('resize', () => {
         if (document.activeElement.tagName !== 'INPUT') {
