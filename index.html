@@ -111,12 +111,13 @@
         
         /* 💎 .card 保持原样，不作修改 */
         .card {
-            background: var(--glass); 
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             border-radius: 20px; padding: 20px; 
             display: flex; align-items: center; gap: 16px; 
-            border: 1px solid var(--glass-border);
             transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            background: var(--glass);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
             position: relative;
             overflow: hidden;
             text-decoration: none;
@@ -203,21 +204,22 @@
     }
 
     async function loadNav() {
-        const container = document.getElementById('nav-container');
         try {
             const response = await fetch('./config.yml');
             const yamlText = await response.text();
             const config = jsyaml.load(yamlText);
+            
+            // 适配标题逻辑
+            if (config.header) document.getElementById('page-title').innerText = config.header.title;
 
-            // 1. 适配参考代码：如果 YAML 中有 header.title，更新页面大标题
-            if (config.header && config.header.title) {
-                const titleElem = document.querySelector('.header h1');
-                if (titleElem) titleElem.innerText = config.header.title;
-            }
-
-            // 2. 渲染分类与卡片
-            container.innerHTML = config.categories.map((cat, idx) => `
-                <div class="category" style="animation-delay: ${idx * 0.1}s">
+            const container = document.getElementById('nav-container');
+            container.innerHTML = '';
+            
+            config.categories.forEach((cat, index) => {
+                const section = document.createElement('div');
+                section.className = 'category';
+                section.style.animationDelay = `${index * 0.1}s`; 
+                section.innerHTML = `
                     <div class="category-title">${cat.name}</div>
                     <div class="grid">${cat.links.map(link => `
                         <a href="${link.url}" class="card" target="_blank">
@@ -227,15 +229,11 @@
                                 <p style="margin:5px 0 0; font-size:0.85rem; opacity:0.8;">${link.desc || ''}</p>
                             </div>
                         </a>
-                    `).join('')}</div>
-                </div>
-            `).join('');
-            
-        } catch (e) { 
-            console.error("Config Load Error:", e);
-            container.innerHTML = '<p style="color:#fff;text-align:center;">配置加载失败，请检查 config.yml</p>';
-        }
-    }
+                    `).join('')}</div>`;
+                container.appendChild(section);
+            });
+        } catch (e) { console.error(e); }
+                }
     
     window.addEventListener('resize', () => {
         if (document.activeElement.tagName !== 'INPUT') {
