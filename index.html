@@ -10,21 +10,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
     <style>
         :root {
-            --glass-bg: rgba(255, 255, 255, 0.5);
+            /* 统一背景变量 */
+            --glass: rgba(255, 255, 255, 0.5);
             --glass-border: rgba(255, 255, 255, 0.3);
             --text-main: #1e293b;
             --accent: #0078d4;
             --download: #ff6b6b;
-            --card-hover: rgba(255, 255, 255, 0.85);
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
-                /* 👑 关键修复：降低暗色模式透明度，确保能透出背景图的人物 */
-                --glass-bg: rgba(15, 23, 42, 0.65); 
+                --glass: rgba(15, 23, 42, 0.7);
                 --glass-border: rgba(255, 255, 255, 0.12);
                 --text-main: #f1f5f9;
-                --card-hover: rgba(30, 41, 59, 0.9);
             }
         }
 
@@ -37,18 +35,28 @@
             padding: 40px 20px 60px; overflow-x: hidden;
         }
 
-        /* 背景层隔离 */
+        /* 👑 背景层修复：使用 inset:0 确保在键盘弹出时高度绝对稳固 */
         .fixed-bg {
-            position: fixed; inset: 0; z-index: -2;
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
             background: #1a1a1a no-repeat center/cover;
-            opacity: 0; transition: opacity 1s ease, transform 0.1s linear;
-            will-change: opacity, transform;
+            opacity: 0;
+            transition: opacity 1s ease;
+            /* 防止重绘闪烁 */
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
         }
 
         .overlay {
-            position: fixed; inset: 0; z-index: -1;
+            position: fixed;
+            inset: 0;
+            z-index: -1;
             background: rgba(0, 0, 0, 0.2);
-            backdrop-filter: brightness(0.9); -webkit-backdrop-filter: brightness(0.9);
+            backdrop-filter: brightness(0.9);
+            -webkit-backdrop-filter: brightness(0.9);
         }
 
         .container { width: 100%; max-width: 900px; z-index: 1; }
@@ -59,9 +67,8 @@
             text-shadow: 0 4px 15px rgba(0,0,0,0.5); 
         }
 
-        /* 全站统一玻璃基类 */
         .glass-style {
-            background: var(--glass-bg);
+            background: var(--glass);
             backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
             border: 1px solid var(--glass-border);
             box-shadow: 0 8px 32px rgba(0,0,0,0.15);
@@ -72,18 +79,23 @@
             border-radius: 30px; font-size: 0.95rem; cursor: pointer;
             transition: transform 0.2s;
         }
-        #hitokoto:active { transform: scale(0.94); }
+        #hitokoto:active { transform: scale(0.96); }
 
         .search-area { margin: 40px 0 55px; display: flex; justify-content: center; }
         .search-box {
             display: flex; align-items: center; width: 100%; max-width: 580px; 
             border-radius: 50px; padding: 6px 22px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: border-color 0.3s;
         }
-        .search-box:focus-within { transform: translateY(-3px); border-color: var(--accent); background: var(--card-hover); }
-        .search-box input { flex: 1; border: none; background: transparent; color: var(--text-main); font-size: 1.1rem; padding: 10px 0; outline: none; }
+        .search-box:focus-within { border-color: var(--accent); }
+        
+        /* 👑 输入框修复：font-size: 16px 彻底解决 iOS 点击缩放问题 */
+        .search-box input { 
+            flex: 1; border: none; background: transparent; 
+            color: var(--text-main); font-size: 16px; 
+            padding: 10px 0; outline: none; 
+        }
 
-        /* 分类标题 */
         .category { margin-bottom: 45px; opacity: 0; animation: fadeInUp 0.8s ease forwards; }
         .category-title {
             display: flex; align-items: center; font-size: 1.25rem; font-weight: bold; 
@@ -93,35 +105,24 @@
 
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
 
-        /* 👑 核心修复：导航框逻辑 */
+        /* 👑 卡片逻辑修复 */
         .card {
+            background: var(--glass);
             padding: 20px; display: flex; align-items: center; gap: 16px; 
             border-radius: 20px; text-decoration: none; color: inherit;
             position: relative; overflow: hidden;
-            transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+            /* 移除了位移，仅保留缩放过渡 */
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* 👑 135度 斜向流光特效 */
-        .card::after {
-            content: ""; position: absolute; inset: 0; left: -150%;
-            background: linear-gradient(135deg, transparent, rgba(255,255,255,0.25), transparent);
-            transition: 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 1;
-        }
-
+        /* 桌面端悬停缩小 & 移动端点击缩小 */
         @media (hover: hover) {
-            .card:hover { transform: translateY(-6px); background: var(--card-hover); border-color: var(--accent); box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
-            .card:hover::after { left: 150%; }
-            .card:hover .icon { transform: rotate(12deg) scale(1.1); }
+            .card:hover { transform: scale(0.96); }
         }
-        
-        /* 移动端点击瞬间缩放反馈 */
-        .card:active { transform: scale(0.95); transition: 0.1s; }
+        .card:active { transform: scale(0.96); }
 
-        /* 图标区域：增加微玻璃质感包裹，防止实心图标突兀 */
         .icon { 
-            font-size: 2.2rem; transition: transform 0.3s ease; 
-            background: rgba(255,255,255,0.1); border-radius: 12px;
+            font-size: 2.2rem; 
             width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
         }
 
@@ -143,7 +144,7 @@
 <div class="container">
     <div class="header">
         <h1>山本小面包🍞的导航页</h1>
-        <div id="hitokoto" class="glass-style">连接异世界中...</div>
+        <div id="hitokoto" class="glass-style">连接中...</div>
     </div>
 
     <div class="search-area">
@@ -163,16 +164,7 @@
 <script>
     const isMobile = /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    // 1. 桌面端视差修复：增加 scale 防止位移露边
-    if (!isMobile) {
-        window.addEventListener('mousemove', (e) => {
-            const x = (e.clientX - window.innerWidth / 2) * 0.01;
-            const y = (e.clientY - window.innerHeight / 2) * 0.01;
-            document.getElementById('bg-layer').style.transform = `translate(${x}px, ${y}px) scale(1.05)`;
-        });
-    }
-
-    // 2. 背景加载与下载链接同步
+    // 背景加载逻辑
     async function initPage() {
         const bgUrl = isMobile ? 'https://api.yppp.net/pe.php' : 'https://api.yppp.net/pc.php';
         try {
@@ -189,17 +181,15 @@
         } catch (e) { console.error("BG Load Error"); }
     }
 
-    // 3. 一言获取
     async function getHitokoto() {
         const hElem = document.getElementById('hitokoto');
         try {
-            const res = await fetch('https://v1.hitokoto.cn?c=a&c=b&c=c&max_length=24');
+            const res = await fetch('https://v1.hitokoto.cn?c=a&c=b&max_length=24');
             const data = await res.json();
             hElem.innerText = `${data.hitokoto} —— 「${data.from}」`;
         } catch (e) { hElem.innerText = "跨越星辰，只为与你相遇。"; }
     }
 
-    // 4. YAML 加载与分类渲染
     async function loadNav() {
         const container = document.getElementById('nav-container');
         try {
@@ -208,14 +198,14 @@
             const config = jsyaml.load(yamlText);
             
             container.innerHTML = config.categories.map((cat, idx) => `
-                <div class="category" style="animation-delay: ${idx * 0.15}s">
+                <div class="category" style="animation-delay: ${idx * 0.1s}">
                     <div class="category-title">${cat.name}</div>
                     <div class="grid">${cat.links.map(link => `
                         <a href="${link.url}" class="card glass-style" target="_blank">
                             <div class="icon">${link.icon || '🔗'}</div>
                             <div class="info">
                                 <h3 style="margin:0; font-size:1.05rem;">${link.name}</h3>
-                                <p style="margin:5px 0 0; font-size:0.85rem; opacity:0.8; line-height:1.4;">${link.desc || ''}</p>
+                                <p style="margin:5px 0 0; font-size:0.85rem; opacity:0.8;">${link.desc || ''}</p>
                             </div>
                         </a>
                     `).join('')}</div>
