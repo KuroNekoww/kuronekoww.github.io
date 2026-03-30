@@ -46,7 +46,6 @@
             background-size: cover;
             opacity: 0;
             transition: opacity 1s ease;
-            /* 强制开启硬件加速 */
             transform: translateZ(0);
             -webkit-transform: translateZ(0);
             backface-visibility: hidden;
@@ -69,18 +68,16 @@
             text-shadow: 0 4px 15px rgba(0,0,0,0.5); 
         }
 
-        /* 👑 统一的毛玻璃样式 */
-        .glass-style {
-            background: var(--glass);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-        }
-
+        /* 👑 这里的样式已从全局 .glass-style 移动到具体 ID 内部进行重复定义 */
         #hitokoto { 
             display: inline-block; margin-top: 18px; padding: 12px 24px;
             border-radius: 30px; font-size: 0.95rem; cursor: pointer;
             transition: transform 0.2s;
+            /* 注入玻璃效果 */
+            background: var(--glass);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
         }
         #hitokoto:hover { transform: scale(1.05); box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
         #hitokoto:active { transform: scale(0.95); }
@@ -90,6 +87,11 @@
             display: flex; align-items: center; width: 100%; max-width: 580px; 
             border-radius: 50px; padding: 6px 22px;
             transition: border-color 0.3s;
+            /* 注入玻璃效果 */
+            background: var(--glass);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
         }
         .search-box:focus-within { border-color: var(--accent); }
         .search-box input { 
@@ -107,6 +109,7 @@
 
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
         
+        /* 💎 .card 保持原样，不作修改 */
         .card {
             background: var(--glass); 
             backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
@@ -119,8 +122,6 @@
             text-decoration: none;
             color: inherit;
         }
-        }
-        
         
         @media (hover: hover) {
             .card:hover { transform: scale(0.98); }
@@ -132,6 +133,11 @@
         .footer-download {
             text-align: center; margin-top: auto; padding: 15px 35px;
             border-radius: 40px; font-size: 0.9rem;
+            /* 注入玻璃效果 */
+            background: var(--glass);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
         }
         .footer-download a { color: var(--download); text-decoration: none; font-weight: 800; }
 
@@ -147,11 +153,11 @@
 <div class="container">
     <div class="header">
         <h1>山本小面包🍞的导航页</h1>
-        <div id="hitokoto" class="glass-style">连接中...</div>
+        <div id="hitokoto">连接中...</div>
     </div>
 
     <div class="search-area">
-        <form class="search-box glass-style" action="https://www.bing.com/search" method="get" target="_blank">
+        <form class="search-box" action="https://www.bing.com/search" method="get" target="_blank">
             <img src="https://picui.ogmua.cn/s1/2026/03/30/69c94d3fbf8c8.webp" alt="B" style="width:24px; margin-right:12px;">
             <input type="text" name="q" placeholder="在 Bing 中搜索..." autocomplete="off">
         </form>
@@ -159,7 +165,7 @@
 
     <div id="nav-container"></div>
 
-    <div class="footer-download glass-style">
+    <div class="footer-download">
         喜欢背景图吗? <a id="download-link" href="#" target="_blank">点击下载</a>
     </div>
 </div>
@@ -168,7 +174,6 @@
     const isMobile = /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     async function initPage() {
-        // 1. 锁定背景高度，防止键盘弹出导致背景闪烁
         const bgLayer = document.getElementById('bg-layer');
         bgLayer.style.height = window.innerHeight + 'px';
 
@@ -208,7 +213,8 @@
                 <div class="category" style="animation-delay: ${idx * 0.1}s">
                     <div class="category-title">${cat.name}</div>
                     <div class="grid">${cat.links.map(link => `
-                        <a href="${link.url}" class="card glass-style" target="_blank">
+                        /* 🚀 注意：这里已经去除了 .glass-style，.card 将独立生效 */
+                        <a href="${link.url}" class="card" target="_blank">
                             <div class="icon">${link.icon || '🔗'}</div>
                             <div class="info">
                                 <h3 style="margin:0; font-size:1.05rem;">${link.name}</h3>
@@ -221,7 +227,6 @@
         } catch (e) { container.innerHTML = '<p style="color:#fff;text-align:center;">配置加载失败</p>'; }
     }
 
-    // 监听窗口尺寸变化，仅在非输入状态下更新背景高度
     window.addEventListener('resize', () => {
         if (document.activeElement.tagName !== 'INPUT') {
             document.getElementById('bg-layer').style.height = window.innerHeight + 'px';
