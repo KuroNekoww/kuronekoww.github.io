@@ -198,7 +198,7 @@
             const config = jsyaml.load(yamlText);
             
             container.innerHTML = config.categories.map((cat, idx) => `
-                <div class="category" style="animation-delay: ${idx * 0.1s}">
+                <div class="category" style="animation-delay: ${idx * 0.1}s">
                     <div class="category-title">${cat.name}</div>
                     <div class="grid">${cat.links.map(link => `
                         <a href="${link.url}" class="card glass-style" target="_blank">
@@ -211,7 +211,10 @@
                     `).join('')}</div>
                 </div>
             `).join('');
-        } catch (e) { container.innerHTML = '<p style="color:#fff;text-align:center;">配置加载失败</p>'; }
+        } catch (e) { 
+            console.error(e); // 加个报错输出，方便以后排查问题
+            container.innerHTML = '<p style="color:#fff;text-align:center;">配置加载失败，请检查 config.yml 格式</p>'; 
+        }
     }
 
     window.addEventListener('DOMContentLoaded', () => {
