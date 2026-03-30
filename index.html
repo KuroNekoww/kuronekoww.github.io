@@ -203,20 +203,22 @@
     }
 
     async function loadNav() {
+        const container = document.getElementById('nav-container');
         try {
             const response = await fetch('./config.yml');
             const yamlText = await response.text();
             const config = jsyaml.load(yamlText);
-            if (config.header) document.getElementById('page-title').innerText = config.header.title;
 
-            const container = document.getElementById('nav-container');
-            container.innerHTML = '';
-            config.categories.forEach((cat, index) => {
-                const section = document.createElement('div');
-                section.className = 'category';
-                section.style.animationDelay = `${index * 0.1}s`; // 渐次入场
-                section.innerHTML = `
-                    <div class="category-title" style="color:#fff; font-weight:bold; margin-bottom:15px; text-shadow:0 2px 10px rgba(0,0,0,0.5);">${cat.name}</div>
+            // 1. 适配参考代码：如果 YAML 中有 header.title，更新页面大标题
+            if (config.header && config.header.title) {
+                const titleElem = document.querySelector('.header h1');
+                if (titleElem) titleElem.innerText = config.header.title;
+            }
+
+            // 2. 渲染分类与卡片
+            container.innerHTML = config.categories.map((cat, idx) => `
+                <div class="category" style="animation-delay: ${idx * 0.1}s">
+                    <div class="category-title">${cat.name}</div>
                     <div class="grid">${cat.links.map(link => `
                         <a href="${link.url}" class="card" target="_blank">
                             <div class="icon">${link.icon || '🔗'}</div>
@@ -225,12 +227,16 @@
                                 <p style="margin:5px 0 0; font-size:0.85rem; opacity:0.8;">${link.desc || ''}</p>
                             </div>
                         </a>
-                    `).join('')}</div>`;
-                container.appendChild(section);
-            });
-        } catch (e) { console.error(e); }
+                    `).join('')}</div>
+                </div>
+            `).join('');
+            
+        } catch (e) { 
+            console.error("Config Load Error:", e);
+            container.innerHTML = '<p style="color:#fff;text-align:center;">配置加载失败，请检查 config.yml</p>';
+        }
     }
-
+    
     window.addEventListener('resize', () => {
         if (document.activeElement.tagName !== 'INPUT') {
             document.getElementById('bg-layer').style.height = window.innerHeight + 'px';
