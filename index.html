@@ -2,317 +2,222 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>山本小面包🍞的导航页</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>山本小面包🍞的导航站</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
     <style>
         :root {
-            --glass-bg: rgba(255, 255, 255, 0.7);
-            --text-main: #1e293b;
-            --text-muted: #475569;
-            --accent-color: #0078d4;
-            --download-link: #ff6b6b;
-            --card-hover: rgba(255, 255, 255, 0.9);
+            --glass: rgba(255, 255, 255, 0.7);
+            --glass-deep: rgba(255, 255, 255, 0.9);
+            --text: #1e293b;
+            --accent: #0078d4;
+            --download: #ff6b6b;
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
-                --glass-bg: rgba(15, 23, 42, 0.75);
-                --text-main: #f1f5f9;
-                --text-muted: #cbd5e1;
-                --card-hover: rgba(30, 41, 59, 0.9);
+                --glass: rgba(15, 23, 42, 0.75);
+                --glass-deep: rgba(30, 41, 59, 0.95);
+                --text: #f1f5f9;
             }
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
 
         body {
-            margin: 0;
-            font-family: 'PingFang SC', 'Helvetica Neue', 'Microsoft YaHei', sans-serif;
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 40px 20px 60px 20px;
-            position: relative;
+            margin: 0; font-family: 'PingFang SC', system-ui, sans-serif;
+            color: var(--text); min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 40px 20px 60px;
         }
 
+        /* 背景层：合并冗余，使用 inset 替代多行坐标 */
         .fixed-bg {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: #1a1a1a;
-            background-position: center center;
-            background-repeat: no-repeat;
-            background-size: cover;
-            background-attachment: fixed;
-            opacity: 0;
-            transition: opacity 0.9s cubic-bezier(0.25, 0.1, 0.25, 1);
+            position: fixed; inset: 0; z-index: -2;
+            background: #1a1a1a no-repeat center/cover;
+            opacity: 0; transition: opacity 1s ease;
             will-change: opacity;
-            z-index: -2;
         }
 
-        body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
+        /* 遮罩层：合并到单独类，减少 body::before 的样式冲突 */
+        .overlay {
+            position: fixed; inset: 0; z-index: -1;
             background: rgba(0, 0, 0, 0.25);
-            z-index: -1;
+            backdrop-filter: brightness(0.9);
+            -webkit-backdrop-filter: brightness(0.9);
         }
 
-        .container { width: 100%; max-width: 900px; z-index: 1; flex: 1; }
+        .container { width: 100%; max-width: 900px; z-index: 1; }
 
         .header { text-align: center; margin-bottom: 40px; }
         .header h1 { 
-            font-size: 2.8rem; margin: 0; color: #fff; 
-            text-shadow: 0 4px 15px rgba(0,0,0,0.5); 
-            letter-spacing: -1px;
+            font-size: clamp(2rem, 5vw, 2.8rem); margin: 0; color: #fff; 
+            text-shadow: 0 4px 15px rgba(0,0,0,0.5); letter-spacing: -1px;
+        }
+
+        /* 公用玻璃质感类 */
+        .glass-effect {
+            background: var(--glass);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
         }
 
         #hitokoto { 
-            display: inline-block;
-            margin-top: 18px; padding: 10px 24px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-radius: 30px;
-            font-size: 0.95rem;
-            color: var(--text-main);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            border: 1px solid rgba(255,255,255,0.1);
-            cursor: pointer;
-            transition: transform 0.15s ease, opacity 0.2s ease;
-            will-change: transform, opacity;
+            display: inline-block; margin-top: 18px; padding: 10px 24px;
+            border-radius: 30px; font-size: 0.95rem; cursor: pointer;
+            transition: all 0.2s ease;
         }
-        #hitokoto:active { transform: scale(0.92); opacity: 0.8; }
+        #hitokoto:active { transform: scale(0.94); opacity: 0.8; }
 
-        .search-area { margin-bottom: 50px; display: flex; justify-content: center; width: 100%; }
+        .search-area { margin-bottom: 50px; display: flex; justify-content: center; }
         .search-box {
-            display: flex; align-items: center; 
-            background: var(--glass-bg);
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            display: flex; align-items: center; width: 100%; max-width: 580px; 
             border-radius: 50px; padding: 6px 20px;
-            width: 100%; max-width: 580px; 
-            border: 1px solid rgba(255,255,255,0.25);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2); 
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .search-box:focus-within { 
-            transform: translateY(-3px); 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3); 
-            border-color: var(--accent-color); 
-        }
-        .search-box img { 
-            width: 26px; 
-            height: 26px; 
-            margin-right: 12px; 
-            flex-shrink: 0;
-            object-fit: contain;
-        }
-        .search-box input {
-            flex: 1; border: none; background: transparent;
-            color: var(--text-main); font-size: 1.1rem; padding: 10px 0; outline: none;
-        }
+        .search-box:focus-within { transform: translateY(-3px); border-color: var(--accent); background: var(--glass-deep); }
+        .search-box input { flex: 1; border: none; background: transparent; color: var(--text); font-size: 1.1rem; padding: 10px 0; }
 
-        /* 👑 修复：分类与标题样式 */
-        .category { 
-            margin-bottom: 45px; 
-            opacity: 0; /* 初始透明，配合动画使用 */
-            animation: fadeInUp 0.8s ease-out forwards;
-        }
-        
+        /* 分类与标题 */
+        .category { margin-bottom: 45px; opacity: 0; animation: fadeInUp 0.8s ease forwards; }
         .category-title {
-            display: flex; /* 确保 Emoji 和文字完美居中对齐 */
-            align-items: center;
-            font-size: 1.25rem; 
-            font-weight: bold; 
-            margin-bottom: 20px;
-            color: #fff; 
-            text-shadow: 0 2px 8px rgba(0,0,0,0.5);
-            padding-left: 14px; 
-            border-left: 4px solid var(--accent-color); /* 增加左侧主题色指示条 */
-            letter-spacing: 1px;
-        }
-
-        /* 👑 修复：补充缺失的入场动画 */
-        @keyframes fadeInUp { 
-            from { opacity: 0; transform: translateY(30px); } 
-            to { opacity: 1; transform: translateY(0); } 
+            display: flex; align-items: center; font-size: 1.25rem; font-weight: bold; 
+            margin-bottom: 20px; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            padding-left: 14px; border-left: 4px solid var(--accent);
         }
 
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
 
         .card {
-            background: var(--glass-bg); 
-            backdrop-filter: blur(15px);
-            border-radius: 20px; padding: 20px; 
-            display: flex; align-items: center; gap: 16px; 
-            border: 1px solid rgba(255,255,255,0.1);
-            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-            position: relative;
-            overflow: hidden;
-            text-decoration: none;
-            color: inherit;
+            padding: 20px; display: flex; align-items: center; gap: 16px; 
+            border-radius: 20px; text-decoration: none; color: inherit;
+            transition: all 0.3s ease; position: relative; overflow: hidden;
         }
 
-        /* 桌面端悬浮效果 */
         @media (hover: hover) {
-            .card:hover { 
-                transform: translateY(-8px) scale(1.02); 
-                background: var(--card-hover);
-                border-color: var(--accent-color);
-                box-shadow: 0 15px 35px rgba(0,0,0,0.3);
-            }
+            .card:hover { transform: translateY(-6px); background: var(--glass-deep); border-color: var(--accent); }
             .card::after {
-                content: ""; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+                content: ""; position: absolute; inset: 0; left: -100%;
                 background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
                 transition: 0.5s;
             }
             .card:hover::after { left: 100%; }
+            .card:hover .icon { transform: rotate(12deg) scale(1.1); }
         }
-
-        /* 移动端点击反馈 */
-        .card:active { transform: scale(0.96); opacity: 0.8; }
+        .card:active { transform: scale(0.96); }
 
         .icon { font-size: 2.2rem; transition: transform 0.3s ease; }
-        .card:hover .icon { transform: rotate(15deg) scale(1.1); }
-        
-        .footer-download {
-            text-align: center; margin-top: 40px; padding: 15px 30px;
-            background: var(--glass-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border-radius: 40px; font-size: 0.9rem;
-            color: var(--text-main); border: 1px solid rgba(255,255,255,0.1);
-        }
-        .footer-download a {
-            color: var(--download-link); text-decoration: none;
-            font-weight: 800; margin-left: 5px; transition: 0.2s;
-        }
-        .footer-download a:hover { text-decoration: underline; opacity: 0.8; }
 
-        @media (max-width: 600px) { 
-            .grid { grid-template-columns: 1fr; } 
-            .header h1 { font-size: 2rem; } 
+        .footer-download {
+            text-align: center; margin-top: auto; padding: 15px 30px;
+            border-radius: 40px; font-size: 0.9rem;
         }
+        .footer-download a { color: var(--download); text-decoration: none; font-weight: 800; }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
 <div class="fixed-bg" id="bg-layer"></div>
+<div class="overlay"></div>
 
 <div class="container">
     <div class="header">
         <h1 id="page-title">山本小面包🍞的导航站</h1>
-        <div id="hitokoto">正在连接异世界...</div>
+        <div id="hitokoto" class="glass-effect">正在连接异世界...</div>
     </div>
 
     <div class="search-area">
-        <form class="search-box" action="https://www.bing.com/search" method="get" target="_blank">
-            <img src="https://picui.ogmua.cn/s1/2026/03/30/69c94d3fbf8c8.webp" alt="Bing">
+        <form class="search-box glass-effect" action="https://www.bing.com/search" method="get" target="_blank">
+            <img src="https://picui.ogmua.cn/s1/2026/03/30/69c94d3fbf8c8.webp" alt="B" style="width:24px; margin-right:12px;">
             <input type="text" name="q" placeholder="在 Bing 中搜索..." autocomplete="off">
         </form>
     </div>
 
     <div id="nav-container"></div>
 
-    <div class="footer-download">
+    <div class="footer-download glass-effect">
         喜欢背景图吗? <a id="download-link" href="#" target="_blank">点击下载</a>
     </div>
 </div>
 
 <script>
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isMobile = /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
     const bgUrl = isMobile ? 'https://api.yppp.net/pe.php' : 'https://api.yppp.net/pc.php';
 
-    async function initBackground() {
+    // 优化 1: 合并请求逻辑，利用一次 fetch 同时解决背景和下载链接
+    async function initPage() {
         const bgLayer = document.getElementById('bg-layer');
-        const downloadBtn = document.getElementById('download-link');
+        const downloadLink = document.getElementById('download-link');
 
         try {
             const res = await fetch(bgUrl);
-            if (res.ok) {
-                const finalUrl = res.url;
+            const finalUrl = res.ok ? res.url : bgUrl;
+            
+            const img = new Image();
+            img.src = finalUrl;
+            img.onload = () => {
                 bgLayer.style.backgroundImage = `url('${finalUrl}')`;
                 bgLayer.style.opacity = '1';
-                downloadBtn.href = finalUrl;
-            }
+                downloadLink.href = finalUrl;
+            };
         } catch (e) {
-            console.error("背景加载失败", e);
             bgLayer.style.backgroundImage = `url('${bgUrl}')`;
             bgLayer.style.opacity = '1';
-            downloadBtn.href = bgUrl;
         }
     }
 
-    function preventKeyboardZoom() {
-        let initialHeight = window.innerHeight;
-        window.addEventListener('resize', () => {
-            const currentHeight = window.innerHeight;
-            const bgLayer = document.getElementById('bg-layer');
-            if (currentHeight < initialHeight - 150) {
-                bgLayer.style.height = initialHeight + 'px';
-            } else {
-                bgLayer.style.height = '100vh';
-            }
-        });
-    }
-
-    function getHitokoto() {
+    // 优化 2: 简化的“一言”获取，移除冗余样式操作
+    async function getHitokoto() {
         const hElem = document.getElementById('hitokoto');
-        hElem.style.opacity = '0.4';
-        fetch('https://v1.hitokoto.cn?c=a&max_length=25', { cache: 'no-cache' })
-            .then(res => res.ok ? res.json() : Promise.reject())
-            .then(data => {
-                hElem.innerText = `${data.hitokoto} —— 「${data.from}」`;
-                hElem.style.opacity = '1';
-            })
-            .catch(() => {
-                hElem.innerText = "跨越星辰，只为与你相遇。";
-                hElem.style.opacity = '1';
-            });
+        try {
+            const res = await fetch('https://v1.hitokoto.cn?c=a&max_length=25');
+            const data = await res.json();
+            hElem.innerText = `${data.hitokoto} —— 「${data.from}」`;
+        } catch (e) {
+            hElem.innerText = "跨越星辰，只为与你相遇。";
+        }
     }
 
+    // 优化 3: 纯净的配置加载逻辑
     async function loadNav() {
+        const container = document.getElementById('nav-container');
         try {
             const response = await fetch('./config.yml');
             const yamlText = await response.text();
             const config = jsyaml.load(yamlText);
+            
             if (config.header) document.getElementById('page-title').innerText = config.header.title;
 
-            const container = document.getElementById('nav-container');
-            container.innerHTML = '';
-            config.categories.forEach((cat, index) => {
-                const section = document.createElement('div');
-                section.className = 'category';
-                section.style.animationDelay = `${index * 0.1}s`; 
-                
-                // 👑 修复：移除了行内样式，统一使用 .category-title 类
-                section.innerHTML = `
+            container.innerHTML = config.categories.map((cat, idx) => `
+                <div class="category" style="animation-delay: ${idx * 0.1}s">
                     <div class="category-title">${cat.name}</div>
                     <div class="grid">${cat.links.map(link => `
-                        <a href="${link.url}" class="card" target="_blank">
+                        <a href="${link.url}" class="card glass-effect" target="_blank">
                             <div class="icon">${link.icon || '🔗'}</div>
                             <div class="info">
                                 <h3 style="margin:0; font-size:1.05rem;">${link.name}</h3>
                                 <p style="margin:5px 0 0; font-size:0.85rem; opacity:0.8;">${link.desc || ''}</p>
                             </div>
                         </a>
-                    `).join('')}</div>`;
-                container.appendChild(section);
-            });
-        } catch (e) { console.error(e); }
+                    `).join('')}</div>
+                </div>
+            `).join('');
+        } catch (e) {
+            container.innerHTML = '<p style="text-align:center;color:#fff;">配置加载失败</p>';
+        }
     }
-    
+
+    // 统一初始化
     window.addEventListener('DOMContentLoaded', () => {
-        initBackground();
+        initPage();
         getHitokoto();
         loadNav();
-        preventKeyboardZoom();
-
-        document.getElementById('hitokoto').addEventListener('click', getHitokoto);
+        document.getElementById('hitokoto').onclick = getHitokoto;
     });
 </script>
-
 </body>
 </html>
