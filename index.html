@@ -10,9 +10,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
     <style>
         :root {
-            /* 统一背景变量 */
             --glass: rgba(255, 255, 255, 0.5);
-            --glass-deep: rgba(255, 255, 255, 0.75); /* 新增：不透明度更高的毛玻璃 */
             --glass-border: rgba(255, 255, 255, 0.3);
             --text-main: #1e293b;
             --accent: #0078d4;
@@ -21,8 +19,7 @@
 
         @media (prefers-color-scheme: dark) {
             :root {
-                --glass: rgba(15, 23, 42, 0.6);
-                --glass-deep: rgba(15, 23, 42, 0.85); /* 新增：暗色模式的深毛玻璃 */
+                --glass: rgba(15, 23, 42, 0.65);
                 --glass-border: rgba(255, 255, 255, 0.12);
                 --text-main: #f1f5f9;
             }
@@ -37,11 +34,11 @@
             padding: 40px 20px 60px; overflow-x: hidden;
         }
 
-        /* 👑 背景层修复：放大尺寸 120%，抵消移动端地址栏收缩和边缘回弹带来的白边黑边 */
+        /* 👑 背景层：通过 JS 锁定 px 高度，彻底解决键盘弹出时的闪烁和缩放 */
         .fixed-bg {
             position: fixed;
-            top: -10vh; bottom: -10vh; left: -10vw; right: -10vw;
-            width: 120vw; height: 120vh;
+            top: 0; left: 0;
+            width: 100vw;
             z-index: -2;
             background-color: #1a1a1a;
             background-repeat: no-repeat;
@@ -49,18 +46,19 @@
             background-size: cover;
             opacity: 0;
             transition: opacity 1s ease;
-            /* 开启硬件加速，防止重绘闪烁 */
+            /* 强制开启硬件加速 */
             transform: translateZ(0);
-            will-change: transform, opacity;
+            -webkit-transform: translateZ(0);
+            backface-visibility: hidden;
         }
 
         .overlay {
             position: fixed;
             inset: 0;
             z-index: -1;
-            background: rgba(0, 0, 0, 0.2);
-            backdrop-filter: brightness(0.9);
-            -webkit-backdrop-filter: brightness(0.9);
+            background: rgba(0, 0, 0, 0.25);
+            backdrop-filter: brightness(0.85);
+            -webkit-backdrop-filter: brightness(0.85);
         }
 
         .container { width: 100%; max-width: 900px; z-index: 1; }
@@ -71,20 +69,12 @@
             text-shadow: 0 4px 15px rgba(0,0,0,0.5); 
         }
 
-        /* 基础毛玻璃（适合输入框等小元素） */
+        /* 👑 统一的毛玻璃样式 */
         .glass-style {
             background: var(--glass);
-            backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-        }
-
-        /* 👑 新增：更深/更清晰的毛玻璃（专供卡片使用） */
-        .glass-deep {
-            background: var(--glass-deep);
-            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-            border: 1px solid var(--glass-border);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
         }
 
         #hitokoto { 
@@ -92,7 +82,6 @@
             border-radius: 30px; font-size: 0.95rem; cursor: pointer;
             transition: transform 0.2s;
         }
-        #hitokoto:active { transform: scale(0.96); }
 
         .search-area { margin: 40px 0 55px; display: flex; justify-content: center; }
         .search-box {
@@ -101,7 +90,6 @@
             transition: border-color 0.3s;
         }
         .search-box:focus-within { border-color: var(--accent); }
-        
         .search-box input { 
             flex: 1; border: none; background: transparent; 
             color: var(--text-main); font-size: 16px; 
@@ -117,23 +105,19 @@
 
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
 
-        /* 卡片现在使用 glass-deep 类 */
+        /* 👑 Card 逻辑完全统一 */
         .card {
             padding: 20px; display: flex; align-items: center; gap: 16px; 
             border-radius: 20px; text-decoration: none; color: inherit;
-            position: relative; overflow: hidden;
-            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         @media (hover: hover) {
-            .card:hover { transform: scale(0.96); }
+            .card:hover { transform: scale(0.98); }
         }
         .card:active { transform: scale(0.96); }
 
-        .icon { 
-            font-size: 2.2rem; 
-            width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
-        }
+        .icon { font-size: 2.2rem; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; }
 
         .footer-download {
             text-align: center; margin-top: auto; padding: 15px 35px;
@@ -141,7 +125,7 @@
         }
         .footer-download a { color: var(--download); text-decoration: none; font-weight: 800; }
 
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(25px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -173,30 +157,25 @@
 <script>
     const isMobile = /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    // 👑 彻底修复背景逻辑：使用 Blob 锁定图片数据，防止浏览器重绘时重新请求 API
     async function initPage() {
+        // 1. 锁定背景高度，防止键盘弹出导致背景闪烁
+        const bgLayer = document.getElementById('bg-layer');
+        bgLayer.style.height = window.innerHeight + 'px';
+
         const bgUrl = isMobile ? 'https://api.yppp.net/pe.php' : 'https://api.yppp.net/pc.php';
         try {
             const res = await fetch(bgUrl);
             const blob = await res.blob();
-            // 创建本地缓存地址，滑动屏幕绝对不会再触发刷新
             const objectUrl = URL.createObjectURL(blob);
             
-            const bgLayer = document.getElementById('bg-layer');
             const img = new Image();
             img.src = objectUrl;
             img.onload = () => {
                 bgLayer.style.backgroundImage = `url('${objectUrl}')`;
                 bgLayer.style.opacity = '1';
-                
-                // 设置下载按钮（这下不仅能看，连原图下载功能也绝对对应上了）
-                const dlLink = document.getElementById('download-link');
-                dlLink.href = objectUrl;
-                dlLink.download = 'Yamamoto_Background.jpg'; // 点击直接下载，不跳转
+                document.getElementById('download-link').href = objectUrl;
             };
-        } catch (e) { 
-            console.error("BG Load Error", e); 
-        }
+        } catch (e) { console.error("BG Error"); }
     }
 
     async function getHitokoto() {
@@ -219,7 +198,7 @@
                 <div class="category" style="animation-delay: ${idx * 0.1}s">
                     <div class="category-title">${cat.name}</div>
                     <div class="grid">${cat.links.map(link => `
-                        <a href="${link.url}" class="card glass-deep" target="_blank">
+                        <a href="${link.url}" class="card glass-style" target="_blank">
                             <div class="icon">${link.icon || '🔗'}</div>
                             <div class="info">
                                 <h3 style="margin:0; font-size:1.05rem;">${link.name}</h3>
@@ -229,11 +208,15 @@
                     `).join('')}</div>
                 </div>
             `).join('');
-        } catch (e) { 
-            console.error(e);
-            container.innerHTML = '<p style="color:#fff;text-align:center;">配置加载失败，请检查 config.yml 格式</p>'; 
-        }
+        } catch (e) { container.innerHTML = '<p style="color:#fff;text-align:center;">配置加载失败</p>'; }
     }
+
+    // 监听窗口尺寸变化，仅在非输入状态下更新背景高度
+    window.addEventListener('resize', () => {
+        if (document.activeElement.tagName !== 'INPUT') {
+            document.getElementById('bg-layer').style.height = window.innerHeight + 'px';
+        }
+    });
 
     window.addEventListener('DOMContentLoaded', () => {
         initPage();
