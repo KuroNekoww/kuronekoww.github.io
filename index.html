@@ -203,17 +203,21 @@
     }
 
     async function loadNav() {
-        const container = document.getElementById('nav-container');
         try {
             const response = await fetch('./config.yml');
             const yamlText = await response.text();
             const config = jsyaml.load(yamlText);
-            
-            container.innerHTML = config.categories.map((cat, idx) => `
-                <div class="category" style="animation-delay: ${idx * 0.1}s">
-                    <div class="category-title">${cat.name}</div>
+            if (config.header) document.getElementById('page-title').innerText = config.header.title;
+
+            const container = document.getElementById('nav-container');
+            container.innerHTML = '';
+            config.categories.forEach((cat, index) => {
+                const section = document.createElement('div');
+                section.className = 'category';
+                section.style.animationDelay = `${index * 0.1}s`; // 渐次入场
+                section.innerHTML = `
+                    <div class="category-title" style="color:#fff; font-weight:bold; margin-bottom:15px; text-shadow:0 2px 10px rgba(0,0,0,0.5);">${cat.name}</div>
                     <div class="grid">${cat.links.map(link => `
-                        /* 🚀 注意：这里已经去除了 .glass-style，.card 将独立生效 */
                         <a href="${link.url}" class="card" target="_blank">
                             <div class="icon">${link.icon || '🔗'}</div>
                             <div class="info">
@@ -221,10 +225,10 @@
                                 <p style="margin:5px 0 0; font-size:0.85rem; opacity:0.8;">${link.desc || ''}</p>
                             </div>
                         </a>
-                    `).join('')}</div>
-                </div>
-            `).join('');
-        } catch (e) { container.innerHTML = '<p style="color:#fff;text-align:center;">配置加载失败</p>'; }
+                    `).join('')}</div>`;
+                container.appendChild(section);
+            });
+        } catch (e) { console.error(e); }
     }
 
     window.addEventListener('resize', () => {
