@@ -1,20 +1,42 @@
-header:
-  title: "山本小面包🍞的导航页"
-
 categories:
-  - name: "🚀 常用工具"
+  - name: 🚀 常用工具
     links:
-      - name: "GitHub"
-        url: "https://github.com"
-        icon: "🐙"
-        desc: "代码托管与开源协作平台。"
-      - name: "ChatGPT"
-        url: "https://chatgpt.com"
-        icon: "🤖"
-        desc: "聪明的人工智能助手。"
-  - name: "📺 休闲娱乐"
+      - title: 必应搜索
+        desc: 微软旗下的强大搜索引擎
+        url: https://www.bing.com
+      - title: DeepL 翻译
+        desc: 准确自然的AI机器翻译
+        url: https://www.deepl.com
+      - title: GitHub
+        desc: 全球最大的代码托管平台
+        url: https://github.com
+      - title: ChatGPT
+        desc: 强大的AI对话语言模型
+        url: https://chat.openai.com
+
+  - name: 📚 学习与开发
     links:
-      - name: "Bilibili"
-        url: "https://bilibili.com"
-        icon: "📺"
-        desc: "干杯！"
+      - title: MDN Web Docs
+        desc: 前端开发的权威文档与教程
+        url: https://developer.mozilla.org
+      - title: 哔哩哔哩
+        desc: 学习各种硬核知识的视频网站
+        url: https://www.bilibili.com
+      - title: 力扣 (LeetCode)
+        desc: 算法题库与编程能力进阶
+        url: https://leetcode.cn
+      - title: 掘金
+        desc: 开发者成长的技术社区
+        url: https://juejin.cn
+
+  - name: 🎨 设计与资源
+    links:
+      - title: Dribbble
+        desc: 发现全球顶尖的设计灵感
+        url: https://dribbble.com
+      - title: Font Awesome
+        desc: 互联网流行的图标字体库
+        url: https://fontawesome.com
+      - title: Unsplash
+        desc: 免费高清摄影图片下载站
+        url: https://unsplash.com
