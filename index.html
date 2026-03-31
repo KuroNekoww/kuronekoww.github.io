@@ -9,12 +9,13 @@
 
     <style>
         :root {
-            --liquid-bg: rgba(255, 255, 255, 0.06);
-            --liquid-blur: blur(28px) saturate(220%) contrast(1.1);
-            --liquid-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.4);
+            --liquid-bg: rgba(255, 255, 255, 0.08);
+            --liquid-blur: blur(28px) saturate(220%);
+            /* 精简阴影：去除了模糊扩散，仅保留上下轻微的立体感 */
+            --liquid-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
             --liquid-inset: 
-                inset 0 1px 1px rgba(255, 255, 255, 0.4), 
-                inset 0 -1px 2px rgba(0, 0, 0, 0.1);
+                inset 0 1px 0px rgba(255, 255, 255, 0.2), 
+                inset 0 -1px 0px rgba(0, 0, 0, 0.2);
             
             --text-color: #ffffff;
             --accent-blue: #4ea1ff;
@@ -23,11 +24,11 @@
 
         @media (prefers-color-scheme: dark) {
             :root {
-                --liquid-bg: rgba(255, 255, 255, 0.04);
-                --liquid-shadow: 0 20px 50px -5px rgba(0, 0, 0, 0.8);
+                --liquid-bg: rgba(255, 255, 255, 0.05);
+                --liquid-shadow: 0 5px 12px rgba(0, 0, 0, 0.6);
                 --liquid-inset: 
-                    inset 0 1px 1px rgba(255, 255, 255, 0.1), 
-                    inset 0 -1px 3px rgba(0, 0, 0, 0.5);
+                    inset 0 1px 0px rgba(255, 255, 255, 0.1), 
+                    inset 0 -1px 0px rgba(0, 0, 0, 0.4);
                 --overlay-color: rgba(0, 0, 0, 0.5);
             }
         }
@@ -65,14 +66,24 @@
 
         header { text-align: center; margin-bottom: 40px; }
         
-        /* 默认标题样式 (桌面端) */
         .main-title {
             font-size: 2.5rem; font-weight: 800; letter-spacing: -1px;
-            margin-bottom: 18px; text-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transition: font-size 0.3s ease;
+            margin-bottom: 18px; text-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
-        /* 搜索框逻辑 */
+        .hitokoto-capsule {
+            display: inline-block;
+            padding: 10px 24px;
+            border-radius: 40px;
+            background: var(--liquid-bg);
+            backdrop-filter: var(--liquid-blur);
+            -webkit-backdrop-filter: var(--liquid-blur);
+            box-shadow: var(--liquid-shadow), var(--liquid-inset);
+            cursor: pointer;
+            max-width: 95%;
+        }
+        #hitokoto-text { font-size: 0.92rem; font-weight: 500; }
+
         .search-wrapper {
             display: flex; align-items: center;
             background: var(--liquid-bg); backdrop-filter: var(--liquid-blur);
@@ -80,18 +91,22 @@
             border-radius: 50px; padding: 16px 30px;
             width: 100%; max-width: 680px; margin: 0 auto 50px auto;
             box-shadow: var(--liquid-shadow), var(--liquid-inset);
-            transition: transform 0.4s cubic-bezier(0.2, 0, 0.2, 1), background-color 0.8s ease, box-shadow 0.3s ease;
+            transition: transform 0.4s cubic-bezier(0.2, 0, 0.2, 1), background-color 0.8s ease;
         }
-        .search-wrapper:focus-within { transform: scale(1.03); background: rgba(255, 255, 255, 0.12); box-shadow: none; }
+        .search-wrapper:focus-within { transform: scale(1.02); background: rgba(255, 255, 255, 0.12); box-shadow: none; }
         .search-wrapper img { width: 22px; height: 22px; margin-right: 14px; }
         .search-wrapper input { flex: 1; background: transparent; border: none; color: #fff; outline: none; font-size: 1.15rem; font-weight: 500; }
 
-        /* 分类标题 */
+        /* 分类标题：改为白色，保留蓝色竖条 */
         .category-title {
-            font-size: 1.1rem; color: var(--accent-blue); margin: 35px 0 20px 0;
-            font-weight: 700; border-left: 4px solid var(--accent-blue);
-            padding-left: 14px; border-radius: 2px;
-            text-shadow: 0 0 15px rgba(78, 161, 255, 0.3);
+            font-size: 1.1rem; 
+            color: #ffffff; /* 改为白色 */
+            margin: 35px 0 20px 0;
+            font-weight: 700; 
+            border-left: 4px solid var(--accent-blue);
+            padding-left: 14px; 
+            border-radius: 2px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         
         .nav-grid {
@@ -114,7 +129,7 @@
         .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
         .card-desc { font-size: 0.88rem; color: rgba(255, 255, 255, 0.55); line-height: 1.5; }
 
-        /* --- 基于 UA 的移动端样式控制 --- */
+        /* 移动端样式 (UA判断触发) */
         body.mobile-mode .main-title {
             font-size: 1.4rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
@@ -135,8 +150,7 @@
             background: var(--liquid-bg); backdrop-filter: blur(20px);
             box-shadow: var(--liquid-shadow), var(--liquid-inset);
         }
-        .footer-link { color: #fff; text-decoration: none; font-size: 0.85rem; font-weight: 600; opacity: 0.7; transition: 0.3s; }
-        .footer-link:hover { opacity: 1; color: var(--accent-blue); }
+        .footer-link { color: #fff; text-decoration: none; font-size: 0.85rem; font-weight: 600; opacity: 0.7; }
     </style>
 </head>
 <body id="main-body">
@@ -163,36 +177,28 @@
     </div>
 
     <script>
-        // 1. UA 判断逻辑
         const checkDevice = () => {
             const ua = navigator.userAgent;
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-            if (isMobile) {
-                document.getElementById('main-body').classList.add('mobile-mode');
-            }
+            if (isMobile) document.getElementById('main-body').classList.add('mobile-mode');
             return isMobile;
         };
         const isMobileDevice = checkDevice();
 
-        // 2. 背景锁定与自适应
         const fixBackgroundLayer = () => {
             const bg = document.getElementById('bg-layer');
-            const physicalHeight = window.screen.height || window.innerHeight;
-            bg.style.height = (physicalHeight + 100) + 'px';
+            bg.style.height = (window.screen.height || window.innerHeight) + 100 + 'px';
             bg.style.width = '100vw';
         };
         fixBackgroundLayer();
         window.addEventListener('resize', fixBackgroundLayer);
-        window.addEventListener('load', fixBackgroundLayer);
 
-        // 3. 搜索逻辑
         document.getElementById('search-input').onkeypress = (e) => {
             if (e.key === 'Enter' && e.target.value.trim()) {
                 window.open(`https://www.bing.com/search?q=${encodeURIComponent(e.target.value)}`, '_blank');
             }
         };
 
-        // 4. 背景加载 (基于 UA 选择 API)
         const loadBackground = async () => {
             const api = isMobileDevice ? 'https://api.yppp.net/pe.php' : 'https://api.yppp.net/pc.php';
             const bg = document.getElementById('bg-layer');
@@ -214,7 +220,6 @@
             setTimeout(loadBackground, 400);
         };
 
-        // 5. 一言
         const fetchHitokoto = async () => {
             const el = document.getElementById('hitokoto-text');
             try {
@@ -226,7 +231,6 @@
         fetchHitokoto();
         document.getElementById('hitokoto-btn').onclick = fetchHitokoto;
 
-        // 6. 渲染导航
         const renderNav = async () => {
             const container = document.getElementById('nav-container');
             try {
