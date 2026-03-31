@@ -85,7 +85,7 @@
 
         .hitokoto-capsule {
             display: inline-block; padding: 10px 24px; border-radius: 40px;
-            cursor: pointer; max-width: 95%; transition: transform 0.2s, background 0.3s;
+            cursor: pointer; max-width: 95%; transition: transform 0.4s, background 0.5s;
         }
         .hitokoto-capsule:active { transform: scale(0.98); background: rgba(255,255,255,0.15); }
         #hitokoto-text { font-size: 0.92rem; font-weight: 500; }
@@ -176,7 +176,7 @@
         const fetchHitokoto = async () => {
             const el = document.getElementById('hitokoto-text');
             try {
-                const res = await fetch('https://v1.hitokoto.cn?max_length=35');
+                const res = await fetch('https://v1.hitokoto.cn?c=a&max_length=25');
                 const data = await res.json();
                 el.innerText = `${data.hitokoto} —— 「${data.from}」`;
             } catch (e) { el.innerText = "纵使疾风起，人生不言弃。"; }
