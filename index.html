@@ -10,24 +10,28 @@
     <style>
         :root {
             --liquid-bg: rgba(255, 255, 255, 0.08);
-            --liquid-blur: blur(28px) saturate(220%);
-            /* 精简阴影：去除了模糊扩散，仅保留上下轻微的立体感 */
-            --liquid-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            --liquid-blur: blur(25px) saturate(200%);
+            
+            /* 精准光影：
+               第一个值：0 1px 2px 阴影略向下偏移，模糊极小
+               第二个值：0 -1px 0 顶部极细微的深色界限
+            */
+            --liquid-shadow: 0 2px 3px -1px rgba(0, 0, 0, 0.3), 0 -1px 0px rgba(0, 0, 0, 0.1);
             --liquid-inset: 
-                inset 0 1px 0px rgba(255, 255, 255, 0.2), 
-                inset 0 -1px 0px rgba(0, 0, 0, 0.2);
+                inset 0 1px 0px rgba(255, 255, 255, 0.15), 
+                inset 0 -1px 0px rgba(0, 0, 0, 0.1);
             
             --text-color: #ffffff;
             --accent-blue: #4ea1ff;
-            --overlay-color: rgba(0, 0, 0, 0.2);
+            --overlay-color: rgba(0, 0, 0, 0.25);
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
                 --liquid-bg: rgba(255, 255, 255, 0.05);
-                --liquid-shadow: 0 5px 12px rgba(0, 0, 0, 0.6);
+                --liquid-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.5), 0 -1px 0px rgba(0, 0, 0, 0.3);
                 --liquid-inset: 
-                    inset 0 1px 0px rgba(255, 255, 255, 0.1), 
+                    inset 0 1px 0px rgba(255, 255, 255, 0.08), 
                     inset 0 -1px 0px rgba(0, 0, 0, 0.4);
                 --overlay-color: rgba(0, 0, 0, 0.5);
             }
@@ -46,8 +50,9 @@
 
         #bg-layer {
             position: fixed;
-            top: 0; left: 0; width: 100vw; height: 120vh;
+            top: 0; left: 0; width: 100vw; height: 100vh;
             background-size: cover; background-position: center;
+            background-repeat: no-repeat;
             opacity: 0; transition: opacity 1s ease;
             z-index: -2; transform: translate3d(0,0,0);
             will-change: opacity;
@@ -66,9 +71,10 @@
 
         header { text-align: center; margin-bottom: 40px; }
         
+        /* 标题：纯净无阴影 */
         .main-title {
             font-size: 2.5rem; font-weight: 800; letter-spacing: -1px;
-            margin-bottom: 18px; text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            margin-bottom: 18px; text-shadow: none;
         }
 
         .hitokoto-capsule {
@@ -84,6 +90,7 @@
         }
         #hitokoto-text { font-size: 0.92rem; font-weight: 500; }
 
+        /* 搜索框：激活即取消阴影，保持平整 */
         .search-wrapper {
             display: flex; align-items: center;
             background: var(--liquid-bg); backdrop-filter: var(--liquid-blur);
@@ -94,19 +101,16 @@
             transition: transform 0.4s cubic-bezier(0.2, 0, 0.2, 1), background-color 0.8s ease;
         }
         .search-wrapper:focus-within { transform: scale(1.02); background: rgba(255, 255, 255, 0.12); box-shadow: none; }
+        
         .search-wrapper img { width: 22px; height: 22px; margin-right: 14px; }
         .search-wrapper input { flex: 1; background: transparent; border: none; color: #fff; outline: none; font-size: 1.15rem; font-weight: 500; }
 
-        /* 分类标题：改为白色，保留蓝色竖条 */
+        /* 分类标题：白色，无阴影 */
         .category-title {
-            font-size: 1.1rem; 
-            color: #ffffff; /* 改为白色 */
-            margin: 35px 0 20px 0;
-            font-weight: 700; 
-            border-left: 4px solid var(--accent-blue);
-            padding-left: 14px; 
-            border-radius: 2px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            font-size: 1.1rem; color: #ffffff; margin: 35px 0 20px 0;
+            font-weight: 700; border-left: 4px solid var(--accent-blue);
+            padding-left: 14px; border-radius: 2px;
+            text-shadow: none;
         }
         
         .nav-grid {
@@ -129,7 +133,7 @@
         .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
         .card-desc { font-size: 0.88rem; color: rgba(255, 255, 255, 0.55); line-height: 1.5; }
 
-        /* 移动端样式 (UA判断触发) */
+        /* UA 适配样式 */
         body.mobile-mode .main-title {
             font-size: 1.4rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
@@ -177,6 +181,7 @@
     </div>
 
     <script>
+        // UA 检测实现极简适配
         const checkDevice = () => {
             const ua = navigator.userAgent;
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
@@ -185,20 +190,7 @@
         };
         const isMobileDevice = checkDevice();
 
-        const fixBackgroundLayer = () => {
-            const bg = document.getElementById('bg-layer');
-            bg.style.height = (window.screen.height || window.innerHeight) + 100 + 'px';
-            bg.style.width = '100vw';
-        };
-        fixBackgroundLayer();
-        window.addEventListener('resize', fixBackgroundLayer);
-
-        document.getElementById('search-input').onkeypress = (e) => {
-            if (e.key === 'Enter' && e.target.value.trim()) {
-                window.open(`https://www.bing.com/search?q=${encodeURIComponent(e.target.value)}`, '_blank');
-            }
-        };
-
+        // 背景逻辑：cover 填充，防止黑边
         const loadBackground = async () => {
             const api = isMobileDevice ? 'https://api.yppp.net/pe.php' : 'https://api.yppp.net/pc.php';
             const bg = document.getElementById('bg-layer');
@@ -220,6 +212,7 @@
             setTimeout(loadBackground, 400);
         };
 
+        // 一言 API
         const fetchHitokoto = async () => {
             const el = document.getElementById('hitokoto-text');
             try {
@@ -231,6 +224,7 @@
         fetchHitokoto();
         document.getElementById('hitokoto-btn').onclick = fetchHitokoto;
 
+        // 导航渲染
         const renderNav = async () => {
             const container = document.getElementById('nav-container');
             try {
