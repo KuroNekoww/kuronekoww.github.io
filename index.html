@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>山本小面包🍞的导航页</title>
     <link rel="icon" href="ico.ico">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
@@ -12,9 +12,8 @@
             --glass-bg: rgba(255, 255, 255, 0.1);
             --glass-border: rgba(255, 255, 255, 0.2);
             --text-color: #ffffff;
-            --coral-red: #ff7f50;
             --overlay-color: rgba(0, 0, 0, 0.25);
-            --accent-blue: #3b82f6; /* 指定高亮蓝色 */
+            --accent-blue: #3b82f6; /* 统一的高亮蓝色 */
         }
 
         @media (prefers-color-scheme: dark) {
@@ -35,24 +34,28 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             color: var(--text-color);
-            overflow-x: hidden;
-            min-height: 100vh;
             background-color: #1a1a1a;
+            /* 防止页面在某些浏览器下整体跳动 */
+            width: 100vw;
+            overflow-x: hidden;
         }
 
-        /* 背景层 */
+        /* ================= 背景层：终极锁定逻辑 ================= */
         #bg-layer {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%; 
+            width: 100vw;
+            /* 初始高度设为极大值，防止加载瞬间留白，后续由 JS 精确锁定物理高度 */
+            height: 120vh; 
             background-size: cover;
             background-position: center;
             opacity: 0; 
             transition: opacity 0.8s ease-in-out;
             z-index: -2;
+            /* 硬件加速：将图层提升至 GPU */
             transform: translate3d(0,0,0);
+            -webkit-transform: translate3d(0,0,0);
             backface-visibility: hidden;
             will-change: opacity;
         }
@@ -61,11 +64,11 @@
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             background: var(--overlay-color);
             z-index: -1;
-            transition: background 0.3s ease;
+            pointer-events: none;
         }
 
         .container {
@@ -75,38 +78,34 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            position: relative;
+            z-index: 1;
         }
 
-        header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
+        header { text-align: center; margin-bottom: 40px; }
         .main-title {
-            font-size: 2.8rem;
+            font-size: 2.5rem;
             font-weight: bold;
             text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
             margin-bottom: 15px;
-            letter-spacing: 2px;
         }
 
         .hitokoto-capsule {
             display: inline-block;
-            padding: 10px 25px;
+            padding: 10px 22px;
             border-radius: 50px;
             background: var(--glass-bg);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 4px 10px rgba(0,0,0,0.1);
+            border: 1px solid var(--glass-border);
             cursor: pointer;
             transition: transform 0.2s;
             max-width: 90%;
         }
-
         .hitokoto-capsule:active { transform: scale(0.96); }
-        #hitokoto-text { font-size: 0.95rem; opacity: 0.9; line-height: 1.4; }
+        #hitokoto-text { font-size: 0.9rem; opacity: 0.9; line-height: 1.5; }
 
-        /* 搜索框 */
+        /* 搜索框：蓝色边框高亮 */
         .search-wrapper {
             display: flex;
             align-items: center;
@@ -115,96 +114,81 @@
             -webkit-backdrop-filter: blur(15px);
             border-radius: 50px;
             padding: 12px 25px;
-            width: 60%;
+            width: 100%;
+            max-width: 600px;
             margin: 0 auto 50px auto;
             border: 1px solid var(--glass-border);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            transition: border-color 0.3s ease, box-shadow 0.3s ease, width 0.3s ease;
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
-
-        .search-wrapper img { width: 22px; height: 22px; margin-right: 15px; }
-
+        .search-wrapper:focus-within {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3), 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        .search-wrapper img { width: 20px; height: 20px; margin-right: 12px; }
         .search-wrapper input {
             flex: 1;
             background: transparent;
             border: none;
             color: white;
             outline: none;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
         }
 
-        .search-wrapper:focus-within {
-            border-color: var(--accent-blue);
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3), 0 8px 32px rgba(0, 0, 0, 0.2);
-        }
-
-        /* 导航卡片 */
+        /* 导航网格 */
         .category-title {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             border-left: 4px solid var(--accent-blue); 
             padding-left: 12px;
-            margin: 40px 0 20px 0;
+            margin: 30px 0 15px 0;
         }
-
         .nav-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 20px;
+            gap: 15px;
         }
-
         .nav-card {
             background: var(--glass-bg);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 22px;
+            border-radius: 15px;
+            padding: 20px;
             text-decoration: none;
             color: white;
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(15px);
             transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.3s;
         }
-
         .nav-card.show { animation: fadeUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
         @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+        .card-title { font-size: 1.05rem; font-weight: 600; margin-bottom: 4px; }
+        .card-desc { font-size: 0.8rem; color: rgba(255, 255, 255, 0.6); line-height: 1.4; }
 
-        .card-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 6px; }
-        .card-desc { font-size: 0.85rem; color: rgba(255, 255, 255, 0.65); line-height: 1.4; }
-
-        /* 页脚下载框 - 重构部分 */
-        footer { margin-top: 60px; text-align: center; padding-bottom: 30px; }
-        
+        /* 页脚：下载逻辑 */
+        footer { margin-top: auto; padding: 40px 0 20px 0; text-align: center; }
         .footer-glass {
             display: inline-block;
             background: var(--glass-bg);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid var(--glass-border);
-            padding: 12px 30px;
-            border-radius: 25px;
-            line-height: 1.8; /* 增加行高，分两行更美观 */
-        }
-
-        .footer-text {
+            padding: 12px 25px;
+            border-radius: 20px;
             font-size: 0.85rem;
-            color: rgba(255, 255, 255, 0.8); /* 普通文字颜色 */
+            line-height: 2;
         }
-
-        .highlight-link {
-            color: var(--accent-blue) !important; /* 特殊高亮颜色 */
+        .normal-text { color: rgba(255, 255, 255, 0.7); }
+        .highlight-blue {
+            color: var(--accent-blue) !important;
+            font-weight: bold;
             text-decoration: none;
-            font-weight: 600;
             cursor: pointer;
-            transition: opacity 0.2s;
         }
-
-        .highlight-link:hover { opacity: 0.8; text-decoration: underline; }
 
         @media (max-width: 768px) {
+            .nav-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
             .main-title { font-size: 1.8rem; }
-            .search-wrapper { width: 100%; }
-            .nav-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
         }
     </style>
 </head>
@@ -231,31 +215,45 @@
 
         <footer>
             <div class="footer-glass">
-                <div class="footer-text">
-                    喜欢背景图吗？<a id="download-bg" class="highlight-link" href="#" target="_blank">点击下载</a>
+                <div class="normal-text">
+                    喜欢背景图吗？<a id="download-bg" class="highlight-blue" href="#" target="_blank">点击下载</a>
                 </div>
-                <div class="footer-text">
-                    不喜欢背景图？<span id="refresh-bg" class="highlight-link">换一个</span>
+                <div class="normal-text">
+                    不喜欢背景图？<span id="refresh-bg" class="highlight-blue">换一个</span>
                 </div>
             </div>
         </footer>
     </div>
 
     <script>
-        // 1. 锁定背景高度
-        const lockBgHeight = () => {
-            document.getElementById('bg-layer').style.height = window.innerHeight + 'px';
+        /**
+         * 1. 终极背景高度锁定逻辑
+         * 使用 screen.height (物理屏幕高度) 彻底脱离浏览器 UI 的干扰
+         */
+        const fixBackgroundLayer = () => {
+            const bg = document.getElementById('bg-layer');
+            // 获取物理屏幕的高度，并增加 100px 的冗余，确保在任何地址栏伸缩下都不会露底
+            const physicalHeight = window.screen.height || window.innerHeight;
+            bg.style.height = (physicalHeight + 100) + 'px';
+            bg.style.width = '100vw';
         };
-        lockBgHeight();
-        window.addEventListener('resize', () => {
-            if (document.activeElement.tagName !== 'INPUT') lockBgHeight();
-        });
 
-        // 2. 一言 API
+        // 页面初始化及旋转时修复
+        fixBackgroundLayer();
+        window.addEventListener('orientationchange', () => {
+            setTimeout(fixBackgroundLayer, 200);
+        });
+        
+        // 针对复杂的 WebView，监听首屏加载
+        window.addEventListener('load', fixBackgroundLayer);
+
+        /**
+         * 2. 一言 API：格式 `${data.hitokoto} —— 「${data.from}」`
+         */
         const fetchHitokoto = async () => {
             const el = document.getElementById('hitokoto-text');
             try {
-                const res = await fetch('https://v1.hitokoto.cn?c=a&c=b&max_length=30');
+                const res = await fetch('https://v1.hitokoto.cn?max_length=35');
                 const data = await res.json();
                 el.innerText = `${data.hitokoto} —— 「${data.from}」`;
             } catch (e) { el.innerText = "纵使疾风起，人生不言弃。 —— 「起风了」"; }
@@ -263,14 +261,15 @@
         fetchHitokoto();
         document.getElementById('hitokoto-btn').onclick = fetchHitokoto;
 
-        // 3. 搜索逻辑
+        /**
+         * 3. 搜索与背景切换
+         */
         document.getElementById('search-input').onkeypress = (e) => {
             if (e.key === 'Enter' && e.target.value.trim()) {
                 window.open(`https://www.bing.com/search?q=${encodeURIComponent(e.target.value)}`, '_blank');
             }
         };
 
-        // 4. 背景加载逻辑
         const loadBackground = async () => {
             const isMobile = window.innerWidth <= 768;
             const api = isMobile ? 'https://api.yppp.net/pe.php' : 'https://api.yppp.net/pc.php';
@@ -288,19 +287,18 @@
             } catch (e) {
                 document.getElementById('bg-layer').style.backgroundImage = `url('${api}')`;
                 document.getElementById('bg-layer').style.opacity = 1;
-                document.getElementById('download-bg').href = api;
             }
         };
         loadBackground();
 
-        // “换一个”点击事件
         document.getElementById('refresh-bg').onclick = () => {
-            const bg = document.getElementById('bg-layer');
-            bg.style.opacity = 0; // 先淡出
-            setTimeout(loadBackground, 400); // 延迟加载新图
+            document.getElementById('bg-layer').style.opacity = 0;
+            setTimeout(loadBackground, 400);
         };
 
-        // 5. 渲染导航
+        /**
+         * 4. 导航渲染
+         */
         const renderNav = async () => {
             const container = document.getElementById('nav-container');
             try {
@@ -328,11 +326,9 @@
                     });
                     container.appendChild(grid);
                 });
-            } catch (e) {
-                container.innerHTML = '<p style="text-align:center;padding:20px;">配置读取失败。</p>';
-            }
+            } catch (e) { console.error("Config load error"); }
         };
         renderNav();
     </script>
 </body>
-                               </html>
+</html>
