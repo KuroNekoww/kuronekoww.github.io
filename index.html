@@ -9,22 +9,30 @@
 
     <style>
         :root {
-            /* 提取自 Liunian / iOS 26 液态玻璃的极致参数 */
-            --liquid-bg: rgba(255, 255, 255, 0.02);
-            --liquid-blur: blur(30px) saturate(250%) contrast(1.1) brightness(1.05);
-            /* 边缘液态高光与水滴体积感 */
-            --liquid-edge: inset 0 1px 2px rgba(255, 255, 255, 0.4), 
-                           inset 0 -1px 2px rgba(0, 0, 0, 0.1),
-                           0 10px 40px -10px rgba(0, 0, 0, 0.3);
+            /* 极高饱和度与通透度的液态基色 */
+            --liquid-bg: rgba(255, 255, 255, 0.05);
+            /* 模拟物理透镜的多层投影：外发散阴影 + 内聚光边缘 */
+            --liquid-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.5);
+            /* 核心高光效果：顶部 1px 的白色亮边模拟光源受光面 */
+            --liquid-inset: 
+                inset 0 1px 2px rgba(255, 255, 255, 0.4), 
+                inset 0 -1px 2px rgba(0, 0, 0, 0.1),
+                inset 0 10px 20px rgba(255, 255, 255, 0.05);
+            
+            --text-color: #ffffff;
+            --overlay-color: rgba(0, 0, 0, 0.15);
+            --accent-blue: #4ea1ff; /* 调亮一点，增加发光感 */
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
-                --liquid-bg: rgba(0, 0, 0, 0.1);
-                --liquid-blur: blur(30px) saturate(250%) contrast(1.2) brightness(0.9);
-                --liquid-edge: inset 0 1px 2px rgba(255, 255, 255, 0.15), 
-                               inset 0 -1px 2px rgba(0, 0, 0, 0.4),
-                               0 15px 40px -10px rgba(0, 0, 0, 0.6);
+                --liquid-bg: rgba(0, 0, 0, 0.2);
+                --liquid-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.7);
+                --liquid-inset: 
+                    inset 0 1px 1px rgba(255, 255, 255, 0.15), 
+                    inset 0 -1px 2px rgba(0, 0, 0, 0.4),
+                    inset 0 5px 15px rgba(255, 255, 255, 0.02);
+                --overlay-color: rgba(0, 0, 0, 0.4);
             }
         }
 
@@ -36,47 +44,38 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+            color: var(--text-color);
             background-color: #000;
             width: 100vw;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* 背景层：负责承载图片 */
         #bg-layer {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 120vh; 
             background-size: cover;
             background-position: center;
             opacity: 0; 
-            transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: -2;
+            transform: translateZ(0);
         }
 
-        /* 核心液态容器样式 (复用类) */
-        .liquid-glass {
-            background: var(--liquid-bg);
-            backdrop-filter: var(--liquid-blur);
-            -webkit-backdrop-filter: var(--liquid-blur);
-            box-shadow: var(--liquid-edge);
-            border: none;
-            /* 防止背景溢出破坏水滴感 */
-            transform: translateZ(0); 
-        }
-
-        /* 动态反色文字：液态玻璃灵魂属性 */
-        /* 通过白色文字与背景的差值计算，实现背景亮字黑，背景暗字白 */
-        .dynamic-text {
-            color: #ffffff;
-            mix-blend-mode: difference;
-            /* 略微降低透明度，让反色不至于过于刺眼生硬 */
-            opacity: 0.9; 
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: var(--overlay-color);
+            backdrop-filter: contrast(1.1); /* 稍微增加全局对比度，让玻璃感更强 */
+            z-index: -1;
+            pointer-events: none;
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1000px; /* 收紧一点，视觉更聚焦 */
             margin: 0 auto;
-            padding: 50px 20px;
+            padding: 60px 24px;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
@@ -84,82 +83,78 @@
             z-index: 1;
         }
 
-        header { text-align: center; margin-bottom: 50px; }
-        
+        header { text-align: center; margin-bottom: 60px; }
         .main-title {
-            font-size: 2.2rem;
-            font-weight: 700;
-            margin-bottom: 25px;
-            letter-spacing: 1px;
+            font-size: 2.8rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 20px;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        /* -------------------------- */
-        /* 复刻 Liunian 搜索框样式   */
-        /* -------------------------- */
-        .search-wrapper {
-            display: flex;
-            align-items: center;
-            width: 100%;
-            max-width: 680px;
-            margin: 0 auto 60px auto;
-            padding: 16px 28px;
-            border-radius: 60px; /* 大曲率水滴形 */
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease;
-        }
-        
-        .search-wrapper:focus-within {
-            transform: scale(1.03);
-            /* 聚焦时加深透镜边缘阴影 */
-            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.5), 
-                        inset 0 -1px 2px rgba(0, 0, 0, 0.1),
-                        0 20px 50px -10px rgba(0, 0, 0, 0.4);
-        }
-
-        .search-icon {
-            width: 24px;
-            height: 24px;
-            margin-right: 15px;
-            /* 同样应用反色逻辑 */
-            fill: #ffffff;
-            mix-blend-mode: difference;
-            opacity: 0.8;
-        }
-
-        .search-wrapper input {
-            flex: 1;
-            background: transparent;
-            border: none;
-            outline: none;
-            font-size: 1.15rem;
-            font-weight: 500;
-            /* 输入框文字同样动态反色 */
-            color: #ffffff;
-            mix-blend-mode: difference;
-        }
-        .search-wrapper input::placeholder {
-            color: #ffffff;
-            opacity: 0.5;
-        }
-
-        /* -------------------------- */
-        /* 音乐底栏风格：一言 & 导航  */
-        /* -------------------------- */
+        /* 一言 capsule */
         .hitokoto-capsule {
             display: inline-block;
             padding: 12px 28px;
             border-radius: 40px;
+            background: var(--liquid-bg);
+            backdrop-filter: blur(25px) saturate(200%);
+            -webkit-backdrop-filter: blur(25px) saturate(200%);
+            box-shadow: var(--liquid-shadow), var(--liquid-inset);
             cursor: pointer;
-            transition: transform 0.2s ease;
-            max-width: 90%;
+            transition: all 0.3s ease;
         }
-        .hitokoto-capsule:active { transform: scale(0.96); }
-        #hitokoto-text { font-size: 0.95rem; font-weight: 500; }
+        .hitokoto-capsule:active { transform: scale(0.96); opacity: 0.8; }
+        #hitokoto-text { font-size: 0.95rem; font-weight: 500; opacity: 0.9; }
 
+        /* --- 搜索框：优化后的巨型高光液态透镜 --- */
+        .search-wrapper {
+            display: flex;
+            align-items: center;
+            background: var(--liquid-bg);
+            /* 极高的模糊度与饱和度 */
+            backdrop-filter: blur(30px) saturate(250%) contrast(1.1);
+            -webkit-backdrop-filter: blur(30px) saturate(250%) contrast(1.1);
+            border-radius: 60px; 
+            padding: 18px 35px; /* 增加内边距使其更高 */
+            width: 100%;
+            max-width: 720px; /* 调大搜索框 */
+            margin: 0 auto 70px auto;
+            box-shadow: var(--liquid-shadow), var(--liquid-inset);
+            transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+        
+        .search-wrapper:focus-within {
+            transform: scale(1.04); /* 适当放大 */
+            background: rgba(255, 255, 255, 0.08);
+            /* 聚焦时强化顶部高光 */
+            box-shadow: 
+                0 30px 60px -15px rgba(0, 0, 0, 0.6), 
+                inset 0 1.5px 2px rgba(255, 255, 255, 0.6),
+                inset 0 0 25px rgba(78, 161, 255, 0.15); /* 淡淡的蓝色内聚光 */
+        }
+        
+        .search-wrapper img { width: 24px; height: 24px; margin-right: 18px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+        .search-wrapper input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #fff;
+            outline: none;
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+        .search-wrapper input::placeholder { color: rgba(255,255,255,0.4); }
+
+        /* 导航部分 */
         .category-title {
             font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent-blue);
             margin: 40px 0 20px 10px;
-            font-weight: 600;
-            opacity: 0.8;
+            font-weight: 700;
+            text-shadow: 0 0 15px rgba(78, 161, 255, 0.4);
         }
         
         .nav-grid {
@@ -169,103 +164,124 @@
         }
         
         .nav-card {
-            padding: 24px;
-            border-radius: 28px; /* 类似音乐播放器底栏的圆润度 */
+            background: var(--liquid-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-radius: 28px;
+            padding: 26px;
             text-decoration: none;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+            color: white;
             opacity: 0;
-            transform: translateY(10px) scale(0.98);
-            transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transform: translateY(20px);
+            box-shadow: var(--liquid-shadow), var(--liquid-inset);
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
         }
         
-        .nav-card.show {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-
         .nav-card:hover {
-            transform: translateY(-3px) scale(1.02);
-            /* 悬浮时提高亮度模拟液体流动 */
-            background: rgba(255, 255, 255, 0.06);
+            transform: translateY(-6px) scale(1.02);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), var(--liquid-inset);
         }
         
-        .card-title { font-size: 1.1rem; font-weight: 600; }
-        .card-desc { font-size: 0.85rem; opacity: 0.7; line-height: 1.4; }
+        .nav-card.show { animation: reveal 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+        @keyframes reveal { to { opacity: 1; transform: translateY(0); } }
+        
+        .card-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; }
+        .card-desc { font-size: 0.9rem; color: rgba(255, 255, 255, 0.6); line-height: 1.6; font-weight: 400; }
 
-        footer { margin-top: auto; padding: 60px 0 30px 0; text-align: center; }
+        footer { margin-top: auto; padding: 80px 0 40px 0; text-align: center; }
         .footer-glass {
-            display: inline-block;
-            padding: 14px 30px;
-            border-radius: 30px;
-            font-size: 0.9rem;
             display: inline-flex;
-            gap: 20px;
-            align-items: center;
+            gap: 25px;
+            background: var(--liquid-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 14px 35px;
+            border-radius: 50px;
+            box-shadow: var(--liquid-shadow), var(--liquid-inset);
         }
         .footer-link {
+            color: var(--text-color);
             text-decoration: none;
+            font-size: 0.9rem;
             font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.2s;
+            opacity: 0.7;
+            transition: all 0.3s ease;
         }
-        .footer-link:hover { opacity: 0.6; }
+        .footer-link:hover { opacity: 1; color: var(--accent-blue); }
 
         @media (max-width: 768px) {
-            .nav-grid { grid-template-columns: 1fr; gap: 16px; }
-            .search-wrapper { padding: 14px 22px; margin-bottom: 40px; }
-            .nav-card { padding: 20px; border-radius: 24px; }
-            .footer-glass { flex-direction: column; gap: 10px; border-radius: 24px; }
+            .container { padding: 40px 20px; }
+            .main-title { font-size: 2rem; }
+            .search-wrapper { padding: 15px 25px; margin-bottom: 40px; }
+            .nav-grid { grid-template-columns: 1fr; gap: 15px; }
+            .footer-glass { flex-direction: column; gap: 12px; border-radius: 30px; }
         }
     </style>
 </head>
 <body>
 
     <div id="bg-layer"></div>
+    <div class="overlay"></div>
 
     <div class="container">
         <header>
-            <h1 class="main-title dynamic-text">山本小面包🍞的导航页</h1>
-            <div class="hitokoto-capsule liquid-glass" id="hitokoto-btn">
-                <span id="hitokoto-text" class="dynamic-text">正在捕捉诗句...</span>
+            <h1 class="main-title">山本小面包🍞的导航页</h1>
+            <div class="hitokoto-capsule" id="hitokoto-btn">
+                <span id="hitokoto-text">正在捕捉诗句...</span>
             </div>
         </header>
 
         <main>
-            <div class="search-wrapper liquid-glass">
-                <svg class="search-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-                </svg>
-                <input type="text" id="search-input" placeholder="在 Bing 上搜索..." autocomplete="off">
+            <div class="search-wrapper">
+                <img src="https://picui.ogmua.cn/s1/2026/03/30/69c94d3fbf8c8.webp" alt="Bing">
+                <input type="text" id="search-input" placeholder="输入搜索内容..." autocomplete="off">
             </div>
             
             <div id="nav-container"></div>
         </main>
 
         <footer>
-            <div class="footer-glass liquid-glass">
-                <a id="download-bg" class="footer-link dynamic-text" href="#" target="_blank">📥 下载壁纸</a>
-                <span id="refresh-bg" class="footer-link dynamic-text">🔄 切换壁纸</span>
+            <div class="footer-glass">
+                <a id="download-bg" class="footer-link" href="#" target="_blank">📥 下载壁纸</a>
+                <span id="refresh-bg" class="footer-link" style="cursor:pointer">🔄 切换背景</span>
             </div>
         </footer>
     </div>
 
     <script>
-        // 背景加载自适应
+        // 背景处理逻辑
         const fixBackgroundLayer = () => {
             const bg = document.getElementById('bg-layer');
             bg.style.height = (window.innerHeight + 100) + 'px';
         };
-        window.addEventListener('resize', fixBackgroundLayer);
         fixBackgroundLayer();
+        window.addEventListener('resize', fixBackgroundLayer);
 
-        // 随机壁纸加载
+        // 一言 API
+        const fetchHitokoto = async () => {
+            const el = document.getElementById('hitokoto-text');
+            try {
+                const res = await fetch('https://v1.hitokoto.cn?max_length=35');
+                const data = await res.json();
+                el.innerText = `${data.hitokoto} —— 「${data.from}」`;
+            } catch (e) { el.innerText = "纵使疾风起，人生不言弃。 —— 「起风了」"; }
+        };
+        fetchHitokoto();
+        document.getElementById('hitokoto-btn').onclick = fetchHitokoto;
+
+        // 搜索跳转
+        document.getElementById('search-input').onkeypress = (e) => {
+            if (e.key === 'Enter' && e.target.value.trim()) {
+                window.open(`https://www.bing.com/search?q=${encodeURIComponent(e.target.value)}`, '_blank');
+            }
+        };
+
+        // 随机背景
         const loadBackground = async () => {
             const isMobile = window.innerWidth <= 768;
             const api = isMobile ? 'https://api.yppp.net/pe.php' : 'https://api.yppp.net/pc.php';
             const bg = document.getElementById('bg-layer');
-            
             try {
                 const res = await fetch(api);
                 const realUrl = res.url;
@@ -285,29 +301,10 @@
 
         document.getElementById('refresh-bg').onclick = () => {
             document.getElementById('bg-layer').style.opacity = 0;
-            setTimeout(loadBackground, 800);
+            setTimeout(loadBackground, 500);
         };
 
-        // 搜索回车跳转
-        document.getElementById('search-input').onkeypress = (e) => {
-            if (e.key === 'Enter' && e.target.value.trim()) {
-                window.open(`https://www.bing.com/search?q=${encodeURIComponent(e.target.value)}`, '_blank');
-            }
-        };
-
-        // 一言 API
-        const fetchHitokoto = async () => {
-            const el = document.getElementById('hitokoto-text');
-            try {
-                const res = await fetch('https://v1.hitokoto.cn?max_length=35');
-                const data = await res.json();
-                el.innerText = `${data.hitokoto} —— 「${data.from}」`;
-            } catch (e) { el.innerText = "纵使疾风起，人生不言弃。 —— 「起风了」"; }
-        };
-        fetchHitokoto();
-        document.getElementById('hitokoto-btn').onclick = fetchHitokoto;
-
-        // 加载 YAML 导航配置
+        // 导航渲染
         const renderNav = async () => {
             const container = document.getElementById('nav-container');
             try {
@@ -315,38 +312,27 @@
                 const yamlText = await res.text();
                 const config = jsyaml.load(yamlText);
                 let delay = 0;
-                
                 config.categories.forEach(cat => {
                     const h2 = document.createElement('h2');
-                    h2.className = 'category-title dynamic-text';
+                    h2.className = 'category-title';
                     h2.innerText = cat.name;
                     container.appendChild(h2);
-                    
                     const grid = document.createElement('div');
                     grid.className = 'nav-grid';
-                    
                     cat.links.forEach(link => {
                         const a = document.createElement('a');
-                        a.className = 'nav-card liquid-glass';
+                        a.className = 'nav-card';
                         a.href = link.url;
                         a.target = '_blank';
-                        // 将文本元素单独包裹，应用反色逻辑
-                        a.innerHTML = `
-                            <div class="card-title dynamic-text">${link.title}</div>
-                            <div class="card-desc dynamic-text">${link.desc}</div>
-                        `;
-                        a.style.transitionDelay = `${delay * 0.05}s`;
+                        a.innerHTML = `<div class="card-title">${link.title}</div><div class="card-desc">${link.desc}</div>`;
+                        a.style.animationDelay = `${delay * 0.06}s`;
                         delay++;
                         grid.appendChild(a);
-                        
-                        // 触发入场动画
-                        requestAnimationFrame(() => {
-                            setTimeout(() => a.classList.add('show'), 100);
-                        });
+                        requestAnimationFrame(() => a.classList.add('show'));
                     });
                     container.appendChild(grid);
                 });
-            } catch (e) { console.error("Config load error", e); }
+            } catch (e) { console.error("Config load error"); }
         };
         renderNav();
     </script>
