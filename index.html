@@ -24,11 +24,11 @@
             }
         }
 
-        /* --- 核心锁定逻辑：禁止 html/body 滚动 --- */
+        /* 1. 彻底切断原生滚动 */
         html, body {
             width: 100%;
             height: 100%;
-            overflow: hidden; /* 彻底切断浏览器原生的 Pan 行为 */
+            overflow: hidden; 
             margin: 0;
             padding: 0;
             background-color: #1a1a1a;
@@ -40,12 +40,11 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* 背景层：物理高度锁定 + 硬件加速 */
         #bg-layer {
             position: fixed;
             top: 0; left: 0; 
-            width: 100vw; 
-            /* 高度由 JS 动态计算 physical height */
+            /* 修复横向滚动：把 100vw 改回 100% */
+            width: 100%; 
             background-size: cover;
             background-position: center;
             opacity: 0; 
@@ -59,20 +58,24 @@
 
         .overlay {
             position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
+            top: 0; left: 0; 
+            /* 修复横向滚动：把 100vw 改回 100% */
+            width: 100%; 
+            height: 100vh;
             background: var(--overlay-color);
             z-index: -1;
             pointer-events: none;
         }
 
-        /* --- 滚动接管容器 --- */
+        /* 2. 内部滚动接管层：强制锁死横向滚动 */
         .scroll-wrapper {
             position: absolute;
             top: 0; left: 0;
             width: 100%;
             height: 100%;
-            overflow-y: auto; /* 这里负责页面滚动 */
-            -webkit-overflow-scrolling: touch; /* iOS 丝滑滚动 */
+            overflow-y: auto; 
+            overflow-x: hidden; /* 修复横向滚动的核心 */
+            -webkit-overflow-scrolling: touch; 
             z-index: 1;
         }
 
@@ -86,10 +89,7 @@
         }
 
         header { text-align: center; margin-bottom: 40px; }
-        .main-title { 
-            font-size: 2.5rem; font-weight: bold; 
-            text-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-bottom: 15px; 
-        }
+        .main-title { font-size: 2.5rem; font-weight: bold; text-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-bottom: 15px; }
 
         .hitokoto-capsule {
             display: inline-block;
@@ -126,15 +126,9 @@
             box-shadow: 0 0 15px rgba(59, 130, 246, 0.3), 0 8px 32px rgba(0,0,0,0.2);
         }
         .search-wrapper img { width: 20px; height: 20px; margin-right: 12px; }
-        .search-wrapper input { 
-            flex: 1; background: transparent; border: none; color: white; 
-            outline: none; font-size: 1.05rem; 
-        }
+        .search-wrapper input { flex: 1; background: transparent; border: none; color: white; outline: none; font-size: 1.05rem; }
 
-        .category-title { 
-            font-size: 1.2rem; border-left: 4px solid var(--accent-blue); 
-            padding-left: 12px; margin: 30px 0 15px 0; 
-        }
+        .category-title { font-size: 1.2rem; border-left: 4px solid var(--accent-blue); padding-left: 12px; margin: 30px 0 15px 0; }
         .nav-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 15px; }
         
         .nav-card {
@@ -208,20 +202,18 @@
     </div>
 
     <script>
-        // 1. 物理高度锁定逻辑
         const fixBg = () => {
             const bg = document.getElementById('bg-layer');
             const h = window.screen.height || window.innerHeight;
-            bg.style.height = (h + 100) + 'px'; // 冗余量确保万无一失
+            bg.style.height = (h + 100) + 'px'; 
         };
         fixBg();
         window.addEventListener('orientationchange', () => setTimeout(fixBg, 200));
 
-        // 2. 一言渲染
         const fetchHitokoto = async () => {
             const el = document.getElementById('hitokoto-text');
             try {
-                const res = await fetch('https://v1.hitokoto.cn?c=a&max_length=25');
+                const res = await fetch('https://v1.hitokoto.cn?max_length=35');
                 const d = await res.json();
                 el.innerText = `${d.hitokoto} —— 「${d.from}」`;
             } catch (e) { el.innerText = "纵使疾风起，人生不言弃。 —— 「起风了」"; }
@@ -229,14 +221,12 @@
         fetchHitokoto();
         document.getElementById('hitokoto-btn').onclick = fetchHitokoto;
 
-        // 3. 搜索逻辑
         document.getElementById('search-input').onkeypress = (e) => {
             if (e.key === 'Enter' && e.target.value.trim()) {
                 window.open(`https://www.bing.com/search?q=${encodeURIComponent(e.target.value)}`, '_blank');
             }
         };
 
-        // 4. 背景加载与切换
         const loadBg = async () => {
             const api = window.innerWidth <= 768 ? 'https://api.yppp.net/pe.php' : 'https://api.yppp.net/pc.php';
             try {
@@ -250,7 +240,13 @@
                     b.style.opacity = 1;
                     document.getElementById('download-bg').href = url;
                 };
-            } catch (e) { document.getElementById('bg-layer').style.opacity = 1; }
+            } catch (e) { 
+                // 3. 核心修复：如果由于跨域限制 fetch 失败，直接暴力赋给背景，确保背景能加载出来
+                const b = document.getElementById('bg-layer');
+                b.style.backgroundImage = `url('${api}')`;
+                b.style.opacity = 1;
+                document.getElementById('download-bg').href = api; // 兜底下载链接
+            }
         };
         loadBg();
         document.getElementById('refresh-bg').onclick = () => {
@@ -258,7 +254,6 @@
             setTimeout(loadBg, 400);
         };
 
-        // 5. 导航卡片渲染
         const renderNav = async () => {
             const container = document.getElementById('nav-container');
             try {
