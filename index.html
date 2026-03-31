@@ -221,7 +221,7 @@
         const fetchHitokoto = async () => {
             const el = document.getElementById('hitokoto-text');
             try {
-                const res = await fetch('https://v1.hitokoto.cn?max_length=35');
+                const res = await fetch('https://v1.hitokoto.cn?c=a&max_length=25');
                 const d = await res.json();
                 el.innerText = `${d.hitokoto} —— 「${d.from}」`;
             } catch (e) { el.innerText = "纵使疾风起，人生不言弃。 —— 「起风了」"; }
