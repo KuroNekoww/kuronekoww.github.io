@@ -68,16 +68,19 @@
             text-shadow: 0 4px 15px rgba(0,0,0,0.5); 
         }
 
-        /* 👑 这里的样式已从全局 .glass-style 移动到具体 ID 内部进行重复定义 */
+        /* 💎 提取出的公共毛玻璃效果类 */
+        .glass-style {
+            background: var(--glass);
+            backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+        }
+
         #hitokoto { 
             display: inline-block; margin-top: 18px; padding: 12px 24px;
             border-radius: 30px; font-size: 0.95rem; cursor: pointer;
             transition: transform 0.2s;
-            /* 注入玻璃效果 */
-            background: var(--glass);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
         }
         #hitokoto:hover { transform: scale(1.05); box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
         #hitokoto:active { transform: scale(0.95); }
@@ -87,11 +90,6 @@
             display: flex; align-items: center; width: 100%; max-width: 580px; 
             border-radius: 50px; padding: 6px 22px;
             transition: border-color 0.3s;
-            /* 注入玻璃效果 */
-            background: var(--glass);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
         }
         .search-box:focus-within { border-color: var(--accent); }
         .search-box input { 
@@ -109,15 +107,10 @@
 
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
         
-        /* 💎 .card 保持原样，不作修改 */
         .card {
             border-radius: 20px; padding: 20px; 
             display: flex; align-items: center; gap: 16px; 
             transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-            background: var(--glass);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
             position: relative;
             overflow: hidden;
             text-decoration: none;
@@ -134,11 +127,6 @@
         .footer-download {
             text-align: center; margin-top: auto; padding: 15px 35px;
             border-radius: 40px; font-size: 0.9rem;
-            /* 注入玻璃效果 */
-            background: var(--glass);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
         }
         .footer-download a { color: var(--download); text-decoration: none; font-weight: 800; }
 
@@ -153,12 +141,12 @@
 
 <div class="container">
     <div class="header">
-        <h1>山本小面包🍞的导航页</h1>
-        <div id="hitokoto">连接中...</div>
+        <h1 id="page-title">山本小面包🍞的导航页</h1>
+        <div id="hitokoto" class="glass-style">连接中...</div>
     </div>
 
     <div class="search-area">
-        <form class="search-box" action="https://www.bing.com/search" method="get" target="_blank">
+        <form class="search-box glass-style" action="https://www.bing.com/search" method="get" target="_blank">
             <img src="https://picui.ogmua.cn/s1/2026/03/30/69c94d3fbf8c8.webp" alt="B" style="width:24px; margin-right:12px;">
             <input type="text" name="q" placeholder="在 Bing 中搜索..." autocomplete="off">
         </form>
@@ -166,7 +154,7 @@
 
     <div id="nav-container"></div>
 
-    <div class="footer-download">
+    <div class="footer-download glass-style">
         喜欢背景图吗? <a id="download-link" href="#" target="_blank">点击下载</a>
     </div>
 </div>
@@ -213,7 +201,10 @@
             // 1. 适配标题：更新 ID 为 page-title 的元素
             if (config.header) {
                 const titleElem = document.getElementById('page-title');
-                if (titleElem) titleElem.innerText = config.header.title;
+                if (titleElem) {
+                    titleElem.innerText = config.header.title;
+                    document.title = config.header.title; // 顺手把网页 Title 也同步了
+                }
             }
 
             // 2. 清空容器并使用参考逻辑进行重构
@@ -225,10 +216,11 @@
                 // 渐次入场动画
                 section.style.animationDelay = `${index * 0.1}s`; 
                 
+                // 给模板里的 <a> 标签加上 glass-style 类
                 section.innerHTML = `
                     <div class="category-title">${cat.name}</div>
                     <div class="grid">${cat.links.map(link => `
-                        <a href="${link.url}" class="card" target="_blank">
+                        <a href="${link.url}" class="card glass-style" target="_blank">
                             <div class="icon">${link.icon || '🔗'}</div>
                             <div class="info">
                                 <h3 style="margin:0; font-size:1.05rem;">${link.name}</h3>
