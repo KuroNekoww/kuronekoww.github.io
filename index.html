@@ -8,14 +8,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
 
     <style>
-        /* ================= 基础变量与深色模式适配 ================= */
         :root {
             --glass-bg: rgba(255, 255, 255, 0.1);
             --glass-border: rgba(255, 255, 255, 0.2);
             --text-color: #ffffff;
             --coral-red: #ff7f50;
             --overlay-color: rgba(0, 0, 0, 0.25);
-            --accent-blue: #3b82f6; /* 搜索框高亮蓝色 */
+            --accent-blue: #3b82f6; /* 指定高亮蓝色 */
         }
 
         @media (prefers-color-scheme: dark) {
@@ -30,7 +29,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            -webkit-tap-highlight-color: transparent; /* 移除移动端点击高亮 */
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -41,7 +40,7 @@
             background-color: #1a1a1a;
         }
 
-        /* ================= 背景层 (锁定高度+硬件加速) ================= */
+        /* 背景层 */
         #bg-layer {
             position: fixed;
             top: 0;
@@ -51,9 +50,8 @@
             background-size: cover;
             background-position: center;
             opacity: 0; 
-            transition: opacity 1s ease-in-out;
+            transition: opacity 0.8s ease-in-out;
             z-index: -2;
-            /* 强制 GPU 加速 */
             transform: translate3d(0,0,0);
             backface-visibility: hidden;
             will-change: opacity;
@@ -79,7 +77,6 @@
             min-height: 100vh;
         }
 
-        /* ================= 顶部页眉 (Header) ================= */
         header {
             text-align: center;
             margin-bottom: 40px;
@@ -102,20 +99,14 @@
             -webkit-backdrop-filter: blur(12px);
             box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 4px 10px rgba(0,0,0,0.1);
             cursor: pointer;
-            transition: transform 0.2s, background 0.3s;
-            max-width: 90%; /* 防止文字过长超出屏幕 */
+            transition: transform 0.2s;
+            max-width: 90%;
         }
 
         .hitokoto-capsule:active { transform: scale(0.96); }
+        #hitokoto-text { font-size: 0.95rem; opacity: 0.9; line-height: 1.4; }
 
-        #hitokoto-text { 
-            font-size: 0.95rem; 
-            letter-spacing: 0.5px; 
-            opacity: 0.9;
-            line-height: 1.4;
-        }
-
-        /* ================= 搜索区 (边框高亮优化) ================= */
+        /* 搜索框 */
         .search-wrapper {
             display: flex;
             align-items: center;
@@ -140,24 +131,19 @@
             color: white;
             outline: none;
             font-size: 1.1rem;
-            padding: 5px 0;
         }
 
-        .search-wrapper input::placeholder { color: rgba(255, 255, 255, 0.6); }
-
-        /* 激活搜索框时：边框变蓝并产生微光 */
         .search-wrapper:focus-within {
             border-color: var(--accent-blue);
             box-shadow: 0 0 15px rgba(59, 130, 246, 0.3), 0 8px 32px rgba(0, 0, 0, 0.2);
         }
 
-        /* ================= 主体内容区 (Nav-Grid) ================= */
+        /* 导航卡片 */
         .category-title {
             font-size: 1.3rem;
             border-left: 4px solid var(--accent-blue); 
             padding-left: 12px;
             margin: 40px 0 20px 0;
-            opacity: 0.9;
         }
 
         .nav-grid {
@@ -175,51 +161,50 @@
             padding: 22px;
             text-decoration: none;
             color: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
             opacity: 0;
             transform: translateY(20px);
-            /* 更加灵动的贝塞尔曲线 */
             transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.3s;
-            will-change: transform, opacity;
-        }
-
-        .nav-card:hover {
-            transform: translateY(-5px);
-            background: rgba(255, 255, 255, 0.18);
         }
 
         .nav-card.show { animation: fadeUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-
         @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
 
         .card-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 6px; }
         .card-desc { font-size: 0.85rem; color: rgba(255, 255, 255, 0.65); line-height: 1.4; }
 
-        /* ================= 底部页脚 ================= */
-        footer { margin-top: 60px; text-align: center; padding-bottom: 20px; }
+        /* 页脚下载框 - 重构部分 */
+        footer { margin-top: 60px; text-align: center; padding-bottom: 30px; }
+        
         .footer-glass {
             display: inline-block;
             background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid var(--glass-border);
-            padding: 8px 25px;
-            border-radius: 30px;
+            padding: 12px 30px;
+            border-radius: 25px;
+            line-height: 1.8; /* 增加行高，分两行更美观 */
         }
-        .footer-glass a { color: var(--coral-red); text-decoration: none; font-size: 0.85rem; font-weight: 500; }
 
-        /* ================= 响应式调整 (Mobile) ================= */
+        .footer-text {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.8); /* 普通文字颜色 */
+        }
+
+        .highlight-link {
+            color: var(--accent-blue) !important; /* 特殊高亮颜色 */
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .highlight-link:hover { opacity: 0.8; text-decoration: underline; }
+
         @media (max-width: 768px) {
             .main-title { font-size: 1.8rem; }
             .search-wrapper { width: 100%; }
-            .nav-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 12px;
-            }
-            .nav-card { padding: 15px; }
-            .nav-card:active { transform: scale(0.96); }
+            .nav-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
         }
     </style>
 </head>
@@ -232,7 +217,7 @@
         <header>
             <h1 class="main-title">山本小面包🍞的导航页</h1>
             <div class="hitokoto-capsule" id="hitokoto-btn">
-                <span id="hitokoto-text">正在捕捉来自远方的诗句...</span>
+                <span id="hitokoto-text">正在捕捉诗句...</span>
             </div>
         </header>
 
@@ -246,37 +231,34 @@
 
         <footer>
             <div class="footer-glass">
-                <a id="download-bg" href="#" target="_blank">喜欢背景图吗？点击下载</a>
+                <div class="footer-text">
+                    喜欢背景图吗？<a id="download-bg" class="highlight-link" href="#" target="_blank">点击下载</a>
+                </div>
+                <div class="footer-text">
+                    不喜欢背景图？<span id="refresh-bg" class="highlight-link">换一个</span>
+                </div>
             </div>
         </footer>
     </div>
 
     <script>
-        // 1. 锁定背景高度，防止移动端键盘弹出导致的抖动
+        // 1. 锁定背景高度
         const lockBgHeight = () => {
             document.getElementById('bg-layer').style.height = window.innerHeight + 'px';
         };
         lockBgHeight();
-        let resizeTimer;
         window.addEventListener('resize', () => {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => {
-                // 只有在非输入状态下才重设高度，避开键盘干扰
-                if (document.activeElement.tagName !== 'INPUT') lockBgHeight();
-            }, 200);
+            if (document.activeElement.tagName !== 'INPUT') lockBgHeight();
         });
 
-        // 2. 一言 API (更新显示格式)
+        // 2. 一言 API
         const fetchHitokoto = async () => {
             const el = document.getElementById('hitokoto-text');
             try {
                 const res = await fetch('https://v1.hitokoto.cn?c=a&c=b&max_length=30');
                 const data = await res.json();
-                // 修复逻辑：显示内容 —— 「出处」
                 el.innerText = `${data.hitokoto} —— 「${data.from}」`;
-            } catch (e) { 
-                el.innerText = "纵使疾风起，人生不言弃。 —— 「起风了」"; 
-            }
+            } catch (e) { el.innerText = "纵使疾风起，人生不言弃。 —— 「起风了」"; }
         };
         fetchHitokoto();
         document.getElementById('hitokoto-btn').onclick = fetchHitokoto;
@@ -288,13 +270,13 @@
             }
         };
 
-        // 4. 动态背景 (确保下载一致性)
+        // 4. 背景加载逻辑
         const loadBackground = async () => {
             const isMobile = window.innerWidth <= 768;
             const api = isMobile ? 'https://api.yppp.net/pe.php' : 'https://api.yppp.net/pc.php';
             try {
                 const res = await fetch(api);
-                const realUrl = res.url; // 捕获 302 重定向后的物理地址
+                const realUrl = res.url;
                 const img = new Image();
                 img.src = realUrl;
                 img.onload = () => {
@@ -311,24 +293,28 @@
         };
         loadBackground();
 
-        // 5. 渲染导航内容
+        // “换一个”点击事件
+        document.getElementById('refresh-bg').onclick = () => {
+            const bg = document.getElementById('bg-layer');
+            bg.style.opacity = 0; // 先淡出
+            setTimeout(loadBackground, 400); // 延迟加载新图
+        };
+
+        // 5. 渲染导航
         const renderNav = async () => {
             const container = document.getElementById('nav-container');
             try {
                 const res = await fetch('./config.yml');
                 const yamlText = await res.text();
                 const config = jsyaml.load(yamlText);
-                
                 let delay = 0;
                 config.categories.forEach(cat => {
                     const h2 = document.createElement('h2');
                     h2.className = 'category-title';
                     h2.innerText = cat.name;
                     container.appendChild(h2);
-
                     const grid = document.createElement('div');
                     grid.className = 'nav-grid';
-                    
                     cat.links.forEach(link => {
                         const a = document.createElement('a');
                         a.className = 'nav-card';
@@ -343,10 +329,10 @@
                     container.appendChild(grid);
                 });
             } catch (e) {
-                container.innerHTML = '<p style="text-align:center;padding:20px;">配置读取失败，请检查 config.yml 文件。</p>';
+                container.innerHTML = '<p style="text-align:center;padding:20px;">配置读取失败。</p>';
             }
         };
         renderNav();
     </script>
 </body>
-</html>
+                               </html>
