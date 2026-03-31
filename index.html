@@ -13,7 +13,7 @@
             --glass-border: rgba(255, 255, 255, 0.2);
             --text-color: #ffffff;
             --overlay-color: rgba(0, 0, 0, 0.25);
-            --accent-blue: #3b82f6; /* 统一的高亮蓝色 */
+            --accent-blue: #3b82f6; 
         }
 
         @media (prefers-color-scheme: dark) {
@@ -24,36 +24,33 @@
             }
         }
 
-        * {
-            box-sizing: border-box;
+        /* --- 核心锁定逻辑：禁止 html/body 滚动 --- */
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* 彻底切断浏览器原生的 Pan 行为 */
             margin: 0;
             padding: 0;
-            -webkit-tap-highlight-color: transparent;
+            background-color: #1a1a1a;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             color: var(--text-color);
-            background-color: #1a1a1a;
-            /* 防止页面在某些浏览器下整体跳动 */
-            width: 100vw;
-            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* ================= 背景层：终极锁定逻辑 ================= */
+        /* 背景层：物理高度锁定 + 硬件加速 */
         #bg-layer {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            /* 初始高度设为极大值，防止加载瞬间留白，后续由 JS 精确锁定物理高度 */
-            height: 120vh; 
+            top: 0; left: 0; 
+            width: 100vw; 
+            /* 高度由 JS 动态计算 physical height */
             background-size: cover;
             background-position: center;
             opacity: 0; 
             transition: opacity 0.8s ease-in-out;
             z-index: -2;
-            /* 硬件加速：将图层提升至 GPU */
             transform: translate3d(0,0,0);
             -webkit-transform: translate3d(0,0,0);
             backface-visibility: hidden;
@@ -62,13 +59,21 @@
 
         .overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
+            top: 0; left: 0; width: 100vw; height: 100vh;
             background: var(--overlay-color);
             z-index: -1;
             pointer-events: none;
+        }
+
+        /* --- 滚动接管容器 --- */
+        .scroll-wrapper {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto; /* 这里负责页面滚动 */
+            -webkit-overflow-scrolling: touch; /* iOS 丝滑滚动 */
+            z-index: 1;
         }
 
         .container {
@@ -77,17 +82,13 @@
             padding: 40px 20px;
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
-            position: relative;
-            z-index: 1;
+            min-height: 100%;
         }
 
         header { text-align: center; margin-bottom: 40px; }
-        .main-title {
-            font-size: 2.5rem;
-            font-weight: bold;
-            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            margin-bottom: 15px;
+        .main-title { 
+            font-size: 2.5rem; font-weight: bold; 
+            text-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-bottom: 15px; 
         }
 
         .hitokoto-capsule {
@@ -105,7 +106,6 @@
         .hitokoto-capsule:active { transform: scale(0.96); }
         #hitokoto-text { font-size: 0.9rem; opacity: 0.9; line-height: 1.5; }
 
-        /* 搜索框：蓝色边框高亮 */
         .search-wrapper {
             display: flex;
             align-items: center;
@@ -118,35 +118,25 @@
             max-width: 600px;
             margin: 0 auto 50px auto;
             border: 1px solid var(--glass-border);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
             transition: border-color 0.3s, box-shadow 0.3s;
         }
         .search-wrapper:focus-within {
             border-color: var(--accent-blue);
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3), 0 8px 32px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3), 0 8px 32px rgba(0,0,0,0.2);
         }
         .search-wrapper img { width: 20px; height: 20px; margin-right: 12px; }
-        .search-wrapper input {
-            flex: 1;
-            background: transparent;
-            border: none;
-            color: white;
-            outline: none;
-            font-size: 1.05rem;
+        .search-wrapper input { 
+            flex: 1; background: transparent; border: none; color: white; 
+            outline: none; font-size: 1.05rem; 
         }
 
-        /* 导航网格 */
-        .category-title {
-            font-size: 1.2rem;
-            border-left: 4px solid var(--accent-blue); 
-            padding-left: 12px;
-            margin: 30px 0 15px 0;
+        .category-title { 
+            font-size: 1.2rem; border-left: 4px solid var(--accent-blue); 
+            padding-left: 12px; margin: 30px 0 15px 0; 
         }
-        .nav-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 15px;
-        }
+        .nav-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 15px; }
+        
         .nav-card {
             background: var(--glass-bg);
             backdrop-filter: blur(10px);
@@ -165,7 +155,6 @@
         .card-title { font-size: 1.05rem; font-weight: 600; margin-bottom: 4px; }
         .card-desc { font-size: 0.8rem; color: rgba(255, 255, 255, 0.6); line-height: 1.4; }
 
-        /* 页脚：下载逻辑 */
         footer { margin-top: auto; padding: 40px 0 20px 0; text-align: center; }
         .footer-glass {
             display: inline-block;
@@ -179,12 +168,7 @@
             line-height: 2;
         }
         .normal-text { color: rgba(255, 255, 255, 0.7); }
-        .highlight-blue {
-            color: var(--accent-blue) !important;
-            font-weight: bold;
-            text-decoration: none;
-            cursor: pointer;
-        }
+        .highlight-blue { color: var(--accent-blue) !important; font-weight: bold; text-decoration: none; cursor: pointer; }
 
         @media (max-width: 768px) {
             .nav-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -197,108 +181,84 @@
     <div id="bg-layer"></div>
     <div class="overlay"></div>
 
-    <div class="container">
-        <header>
-            <h1 class="main-title">山本小面包🍞的导航页</h1>
-            <div class="hitokoto-capsule" id="hitokoto-btn">
-                <span id="hitokoto-text">正在捕捉诗句...</span>
-            </div>
-        </header>
-
-        <main>
-            <div class="search-wrapper">
-                <img src="https://picui.ogmua.cn/s1/2026/03/30/69c94d3fbf8c8.webp" alt="Bing">
-                <input type="text" id="search-input" placeholder="在 Bing 上搜索" autocomplete="off">
-            </div>
-            <div id="nav-container"></div>
-        </main>
-
-        <footer>
-            <div class="footer-glass">
-                <div class="normal-text">
-                    喜欢背景图吗？<a id="download-bg" class="highlight-blue" href="#" target="_blank">点击下载</a>
+    <div class="scroll-wrapper">
+        <div class="container">
+            <header>
+                <h1 class="main-title">山本小面包🍞的导航页</h1>
+                <div class="hitokoto-capsule" id="hitokoto-btn">
+                    <span id="hitokoto-text">正在捕捉诗句...</span>
                 </div>
-                <div class="normal-text">
-                    不喜欢背景图？<span id="refresh-bg" class="highlight-blue">换一个</span>
+            </header>
+
+            <main>
+                <div class="search-wrapper">
+                    <img src="https://picui.ogmua.cn/s1/2026/03/30/69c94d3fbf8c8.webp" alt="Bing">
+                    <input type="text" id="search-input" placeholder="在 Bing 上搜索" autocomplete="off">
                 </div>
-            </div>
-        </footer>
+                <div id="nav-container"></div>
+            </main>
+
+            <footer>
+                <div class="footer-glass">
+                    <div class="normal-text">喜欢背景图吗？<a id="download-bg" class="highlight-blue" target="_blank">点击下载</a></div>
+                    <div class="normal-text">不喜欢背景图？<span id="refresh-bg" class="highlight-blue">换一个</span></div>
+                </div>
+            </footer>
+        </div>
     </div>
 
     <script>
-        /**
-         * 1. 终极背景高度锁定逻辑
-         * 使用 screen.height (物理屏幕高度) 彻底脱离浏览器 UI 的干扰
-         */
-        const fixBackgroundLayer = () => {
+        // 1. 物理高度锁定逻辑
+        const fixBg = () => {
             const bg = document.getElementById('bg-layer');
-            // 获取物理屏幕的高度，并增加 100px 的冗余，确保在任何地址栏伸缩下都不会露底
-            const physicalHeight = window.screen.height || window.innerHeight;
-            bg.style.height = (physicalHeight + 100) + 'px';
-            bg.style.width = '100vw';
+            const h = window.screen.height || window.innerHeight;
+            bg.style.height = (h + 100) + 'px'; // 冗余量确保万无一失
         };
+        fixBg();
+        window.addEventListener('orientationchange', () => setTimeout(fixBg, 200));
 
-        // 页面初始化及旋转时修复
-        fixBackgroundLayer();
-        window.addEventListener('orientationchange', () => {
-            setTimeout(fixBackgroundLayer, 200);
-        });
-        
-        // 针对复杂的 WebView，监听首屏加载
-        window.addEventListener('load', fixBackgroundLayer);
-
-        /**
-         * 2. 一言 API：格式 `${data.hitokoto} —— 「${data.from}」`
-         */
+        // 2. 一言渲染
         const fetchHitokoto = async () => {
             const el = document.getElementById('hitokoto-text');
             try {
                 const res = await fetch('https://v1.hitokoto.cn?max_length=35');
-                const data = await res.json();
-                el.innerText = `${data.hitokoto} —— 「${data.from}」`;
+                const d = await res.json();
+                el.innerText = `${d.hitokoto} —— 「${d.from}」`;
             } catch (e) { el.innerText = "纵使疾风起，人生不言弃。 —— 「起风了」"; }
         };
         fetchHitokoto();
         document.getElementById('hitokoto-btn').onclick = fetchHitokoto;
 
-        /**
-         * 3. 搜索与背景切换
-         */
+        // 3. 搜索逻辑
         document.getElementById('search-input').onkeypress = (e) => {
             if (e.key === 'Enter' && e.target.value.trim()) {
                 window.open(`https://www.bing.com/search?q=${encodeURIComponent(e.target.value)}`, '_blank');
             }
         };
 
-        const loadBackground = async () => {
-            const isMobile = window.innerWidth <= 768;
-            const api = isMobile ? 'https://api.yppp.net/pe.php' : 'https://api.yppp.net/pc.php';
+        // 4. 背景加载与切换
+        const loadBg = async () => {
+            const api = window.innerWidth <= 768 ? 'https://api.yppp.net/pe.php' : 'https://api.yppp.net/pc.php';
             try {
                 const res = await fetch(api);
-                const realUrl = res.url;
+                const url = res.url;
                 const img = new Image();
-                img.src = realUrl;
+                img.src = url;
                 img.onload = () => {
-                    const bg = document.getElementById('bg-layer');
-                    bg.style.backgroundImage = `url('${realUrl}')`;
-                    bg.style.opacity = 1;
-                    document.getElementById('download-bg').href = realUrl;
+                    const b = document.getElementById('bg-layer');
+                    b.style.backgroundImage = `url('${url}')`;
+                    b.style.opacity = 1;
+                    document.getElementById('download-bg').href = url;
                 };
-            } catch (e) {
-                document.getElementById('bg-layer').style.backgroundImage = `url('${api}')`;
-                document.getElementById('bg-layer').style.opacity = 1;
-            }
+            } catch (e) { document.getElementById('bg-layer').style.opacity = 1; }
         };
-        loadBackground();
-
+        loadBg();
         document.getElementById('refresh-bg').onclick = () => {
             document.getElementById('bg-layer').style.opacity = 0;
-            setTimeout(loadBackground, 400);
+            setTimeout(loadBg, 400);
         };
 
-        /**
-         * 4. 导航渲染
-         */
+        // 5. 导航卡片渲染
         const renderNav = async () => {
             const container = document.getElementById('nav-container');
             try {
@@ -307,18 +267,12 @@
                 const config = jsyaml.load(yamlText);
                 let delay = 0;
                 config.categories.forEach(cat => {
-                    const h2 = document.createElement('h2');
-                    h2.className = 'category-title';
-                    h2.innerText = cat.name;
+                    const h2 = document.createElement('h2'); h2.className = 'category-title'; h2.innerText = cat.name;
                     container.appendChild(h2);
-                    const grid = document.createElement('div');
-                    grid.className = 'nav-grid';
-                    cat.links.forEach(link => {
-                        const a = document.createElement('a');
-                        a.className = 'nav-card';
-                        a.href = link.url;
-                        a.target = '_blank';
-                        a.innerHTML = `<div class="card-title">${link.title}</div><div class="card-desc">${link.desc}</div>`;
+                    const grid = document.createElement('div'); grid.className = 'nav-grid';
+                    cat.links.forEach(l => {
+                        const a = document.createElement('a'); a.className = 'nav-card'; a.href = l.url; a.target = '_blank';
+                        a.innerHTML = `<div class="card-title">${l.title}</div><div class="card-desc">${l.desc}</div>`;
                         a.style.animationDelay = `${delay * 0.05}s`;
                         delay++;
                         grid.appendChild(a);
@@ -326,7 +280,7 @@
                     });
                     container.appendChild(grid);
                 });
-            } catch (e) { console.error("Config load error"); }
+            } catch (e) { console.warn("YAML config not found or invalid."); }
         };
         renderNav();
     </script>
