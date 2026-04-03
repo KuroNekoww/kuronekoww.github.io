@@ -2,28 +2,43 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>山本小面包🍞的导航页</title>
-    <link rel="icon" href="ico.ico">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js" defer></script>
 
     <style>
+        /* 声明支持双主题模式 */
         :root {
-            --liquid-bg: rgba(255, 255, 255, 0.1);
-            --liquid-blur: blur(25px) saturate(200%);
-            --liquid-border: rgba(255, 255, 255, 0.18);
-            --text-color: #ffffff;
-            --accent-blue: #4ea1ff;
-            --overlay-color: rgba(0, 0, 0, 0.25);
+            color-scheme: light dark;
+            /* 动画时长统一管控 */
+            --hitokoto-fade-duration: 220ms;
             --transition-normal: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             --transition-bounce: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
+        /* ===================== 浅色模式（系统默认）变量 ===================== */
+        @media (prefers-color-scheme: light) {
+            :root {
+                --liquid-bg: rgba(0, 0, 0, 0.06);
+                --liquid-blur: blur(25px) saturate(200%);
+                --liquid-border: rgba(0, 0, 0, 0.12); /* 深色半透明边框，浅色背景下清晰可见 */
+                --text-color: #1d1d1f; /* 深色文字，浅色背景下可读 */
+                --accent-blue: #007aff; /* 适配浅色模式的品牌蓝 */
+                --overlay-color: rgba(255, 255, 255, 0.4); /* 浅色遮罩，保证动态背景上的文字可读 */
+                --page-bg: #f5f5f7; /* 浅色模式页面背景 */
+            }
+        }
+
+        /* ===================== 深色模式变量 ===================== */
         @media (prefers-color-scheme: dark) {
             :root {
                 --liquid-bg: rgba(255, 255, 255, 0.06);
-                --liquid-border: rgba(255, 255, 255, 0.12);
-                --overlay-color: rgba(0, 0, 0, 0.5);
+                --liquid-blur: blur(25px) saturate(200%);
+                --liquid-border: rgba(255, 255, 255, 0.12); /* 白色半透明边框，深色背景下清晰可见 */
+                --text-color: #ffffff; /* 白色文字，深色背景下可读 */
+                --accent-blue: #4ea1ff; /* 适配深色模式的品牌蓝 */
+                --overlay-color: rgba(0, 0, 0, 0.5); /* 深色遮罩，保证动态背景上的文字可读 */
+                --page-bg: #000000; /* 深色模式页面背景 */
             }
         }
 
@@ -34,11 +49,15 @@
             -webkit-tap-highlight-color: transparent; 
         }
 
+        .interactive-element {
+            transition: var(--transition-bounce);
+            user-select: none;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
             color: var(--text-color);
-            background-color: #000;
-            width: 100vw;
+            background-color: var(--page-bg); /* 背景随主题切换 */
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
         }
@@ -46,102 +65,132 @@
         /* 背景层 */
         #bg-layer {
             position: fixed;
-            top: 0; left: 0; width: 100vw; height: 120vh;
-            background-size: cover; background-position: center; background-repeat: no-repeat;
+            top: 0; left: 0; 
+            width: 100vw;
+            background-size: cover; 
+            background-position: center; 
+            background-repeat: no-repeat;
             opacity: 0; 
             transition: opacity 0.8s ease-in-out, filter 0.4s ease;
             z-index: -2; 
-            transform: translate3d(0,0,0);
-            will-change: opacity, transform;
         }
 
         .overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: var(--overlay-color); z-index: -1; pointer-events: none;
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100vw; 
+            height: 100vh;
+            background: var(--overlay-color); /* 遮罩随主题切换 */
+            z-index: -1; 
+            pointer-events: none;
         }
 
         .container {
-            max-width: 1100px; margin: 0 auto; padding: 40px 20px;
-            min-height: 100vh; position: relative; z-index: 1;
+            max-width: 1100px; 
+            margin: 0 auto; 
+            padding: 40px 20px;
+            min-height: 100vh; 
+            position: relative; 
+            z-index: 1;
         }
 
-        header { text-align: center; margin-bottom: 40px; }
+        header { 
+            text-align: center; 
+            margin-bottom: 40px; 
+        }
         .main-title { 
-            font-size: 2.5rem; font-weight: 800; 
-            letter-spacing: -1px; margin-bottom: 18px;
-            transition: var(--transition-bounce);
+            font-size: 2.5rem; 
+            font-weight: 800; 
+            letter-spacing: -1px; 
+            margin-bottom: 18px;
+        }
+
+        /* 全局毛玻璃组件样式（边框随主题自动适配） */
+        .search-wrapper, .hitokoto-capsule, .nav-card, .footer-glass {
+            background: var(--liquid-bg); 
+            backdrop-filter: var(--liquid-blur); 
+            -webkit-backdrop-filter: var(--liquid-blur);
+            border: 1px solid var(--liquid-border); /* 边框颜色随主题切换，两个模式下对比度一致 */
+            box-shadow: none;
         }
 
         /* 搜索框 */
         .search-wrapper {
-            display: flex; align-items: center;
-            background: var(--liquid-bg); 
-            backdrop-filter: var(--liquid-blur); 
-            -webkit-backdrop-filter: var(--liquid-blur);
-            border-radius: 50px; padding: 16px 30px; 
-            width: 100%; max-width: 680px; 
+            display: flex; 
+            align-items: center;
+            border-radius: 50px; 
+            padding: 16px 30px; 
+            width: 100%; 
+            max-width: 680px; 
             margin: 0 auto 50px auto;
-            border: 1px solid var(--liquid-border);
-            box-shadow: none;
-            transition: var(--transition-bounce); 
-        }
-        /* 桌面端hover效果 */
-        @media (hover: hover) and (pointer: fine) {
-            .search-wrapper:hover {
-                transform: scale(1.02);
-                background: rgba(255, 255, 255, 0.12);
-                border-color: rgba(255, 255, 255, 0.25);
-            }
         }
         .search-wrapper:focus-within {
             transform: scale(1.05);
-            background: rgba(255, 255, 255, 0.15);
+            background: var(--liquid-bg);
             border-color: var(--accent-blue);
-            box-shadow: none;
         }
-        .search-wrapper img { width: 22px; height: 22px; margin-right: 14px; pointer-events: none; }
+        .search-wrapper img { 
+            width: 22px; 
+            height: 22px; 
+            margin-right: 14px; 
+            pointer-events: none; 
+        }
         .search-wrapper input { 
-            flex: 1; background: transparent; 
-            border: none; color: #fff; 
-            outline: none; font-size: 1.15rem; 
+            flex: 1; 
+            background: transparent; 
+            border: none; 
+            color: var(--text-color); /* 输入框文字随主题变色 */
+            outline: none; 
+            font-size: 1.15rem; 
             font-weight: 500;
         }
-
-        /* 全局组件基础样式 */
-        .hitokoto-capsule, .nav-card, .footer-glass {
-            background: var(--liquid-bg); 
-            backdrop-filter: var(--liquid-blur); 
-            -webkit-backdrop-filter: var(--liquid-blur);
-            border: 1px solid var(--liquid-border); 
-            box-shadow: none;
+        .search-wrapper input::placeholder {
+            color: var(--text-color);
+            opacity: 0.5;
         }
 
         /* 一言胶囊 */
         .hitokoto-capsule {
-            display: inline-block; padding: 10px 24px; border-radius: 40px;
-            cursor: pointer; max-width: 95%; 
-            transition: var(--transition-bounce);
-            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 24px; 
+            border-radius: 40px;
+            cursor: pointer; 
+            max-width: 80vw;
+            width: auto;
+            min-height: 38px;
+            overflow: hidden;
+            transition: height var(--hitokoto-fade-duration) ease-in-out, var(--transition-bounce);
         }
-        /* 桌面端hover效果 */
-        @media (hover: hover) and (pointer: fine) {
-            .hitokoto-capsule:hover {
-                transform: scale(1.05);
-                background: rgba(255, 255, 255, 0.15);
-                border-color: var(--accent-blue);
-            }
+        #hitokoto-text {
+            font-size: 0.92rem; 
+            font-weight: 500;
+            line-height: 1.5;
+            transition: opacity var(--hitokoto-fade-duration) ease-in-out, transform var(--hitokoto-fade-duration) ease-in-out;
+            opacity: 1;
+            transform: translateY(0);
+            white-space: normal;
+            word-break: keep-all;
+            text-align: center;
         }
-        /* 移动端触摸反馈 */
-        .hitokoto-capsule:active { 
-            transform: scale(0.90); 
-            background: rgba(255,255,255,0.2); 
+        #hitokoto-text.fade-out {
+            opacity: 0;
+            transform: translateY(-4px);
         }
-        #hitokoto-text { font-size: 0.92rem; font-weight: 500; }
+        #hitokoto-text.fade-in {
+            opacity: 1;
+            transform: translateY(0);
+        }
 
         .category-title {
-            font-size: 1.1rem; color: #ffffff; margin: 35px 0 20px 0;
-            font-weight: 700; border-left: 4px solid var(--accent-blue);
-            padding-left: 14px; border-radius: 2px;
+            font-size: 1.1rem; 
+            color: var(--text-color); /* 标题颜色随主题变色 */
+            margin: 35px 0 20px 0;
+            font-weight: 700; 
+            border-left: 4px solid var(--accent-blue);
+            padding-left: 14px; 
+            border-radius: 2px;
         }
 
         .nav-grid { 
@@ -150,54 +199,39 @@
             gap: 20px; 
         }
 
-        /* 导航卡片核心交互 */
+        /* 导航卡片核心样式 */
         .nav-card {
-            border-radius: 24px; padding: 24px; 
-            text-decoration: none; color: white; 
-            opacity: 0; transform: translateY(30px);
-            transition: var(--transition-bounce);
-            user-select: none;
+            border-radius: 24px; 
+            padding: 24px; 
+            text-decoration: none; 
+            color: var(--text-color); /* 卡片文字随主题变色 */
+            opacity: 0; 
+            transform: translateY(30px);
             overflow: hidden;
             position: relative;
         }
-        /* 滚动入场动画 */
         .nav-card.show { 
             opacity: 1; 
             transform: translateY(0); 
         }
-        /* 桌面端hover效果 */
-        @media (hover: hover) and (pointer: fine) {
-            .nav-card:hover {
-                transform: translateY(-8px) scale(1.02);
-                background: rgba(255, 255, 255, 0.15);
-                border-color: var(--accent-blue);
-            }
-            .nav-card:hover .card-title {
-                color: var(--accent-blue);
-            }
-            .nav-card:hover .card-desc {
-                color: rgba(255, 255, 255, 0.8);
-            }
-        }
-        /* 移动端触摸反馈 */
-        .nav-card:active {
-            transform: scale(0.96);
-            background: rgba(255, 255, 255, 0.2);
-        }
         .card-title { 
-            font-size: 1.1rem; font-weight: 700; 
+            font-size: 1.1rem; 
+            font-weight: 700; 
             margin-bottom: 8px;
             transition: var(--transition-normal);
         }
         .card-desc { 
             font-size: 0.88rem; 
-            color: rgba(255, 255, 255, 0.55); 
+            color: var(--text-color);
+            opacity: 0.55; /* 用透明度控制次要文字，适配双主题 */
             line-height: 1.5;
             transition: var(--transition-normal);
         }
 
         /* 移动端适配 */
-        body.mobile-mode .main-title { font-size: 1.4rem; }
+        body.mobile-mode .main-title { 
+            font-size: 1.4rem; 
+        }
         body.mobile-mode .nav-grid { 
             grid-template-columns: repeat(2, 1fr); 
             gap: 12px; 
@@ -212,31 +246,99 @@
             -webkit-box-orient: vertical; 
             overflow: hidden; 
         }
+        body.mobile-mode .hitokoto-capsule {
+            max-width: 90vw;
+        }
+        body.mobile-mode #hitokoto-text {
+            word-break: break-word;
+        }
 
-        footer { margin: 60px 0 30px 0; text-align: center; }
+        footer { 
+            margin: 60px 0 30px 0; 
+            text-align: center; 
+        }
         .footer-glass { 
-            display: inline-flex; gap: 20px; 
+            display: inline-flex; 
+            gap: 20px; 
             padding: 14px 35px; 
             border-radius: 50px; 
         }
-        /* 底部链接交互 */
         .footer-link { 
-            color: #fff; text-decoration: none; 
-            font-size: 0.85rem; font-weight: 600; 
+            color: var(--text-color); /* 底部链接文字随主题变色 */
+            text-decoration: none; 
+            font-size: 0.85rem; 
+            font-weight: 600; 
             opacity: 0.7; 
-            transition: var(--transition-bounce);
             cursor: pointer;
-            user-select: none;
+            transition: var(--transition-bounce);
         }
-        /* 桌面端hover效果 */
+
+        /* 统一桌面端hover交互 */
         @media (hover: hover) and (pointer: fine) {
+            .search-wrapper:hover {
+                transform: scale(1.02);
+                background: rgba(255, 255, 255, 0.12);
+                border-color: rgba(255, 255, 255, 0.25);
+            }
+            /* 浅色模式hover适配 */
+            @media (prefers-color-scheme: light) {
+                .search-wrapper:hover {
+                    background: rgba(0, 0, 0, 0.08);
+                    border-color: rgba(0, 0, 0, 0.18);
+                }
+            }
+            .hitokoto-capsule:hover {
+                transform: scale(1.05);
+                background: rgba(255, 255, 255, 0.15);
+                border-color: var(--accent-blue);
+            }
+            @media (prefers-color-scheme: light) {
+                .hitokoto-capsule:hover {
+                    background: rgba(0, 0, 0, 0.1);
+                }
+            }
+            .nav-card:hover {
+                transform: translateY(-8px) scale(1.02);
+                background: rgba(255, 255, 255, 0.15);
+                border-color: var(--accent-blue);
+            }
+            @media (prefers-color-scheme: light) {
+                .nav-card:hover {
+                    background: rgba(0, 0, 0, 0.1);
+                }
+            }
+            .nav-card:hover .card-title {
+                color: var(--accent-blue);
+            }
+            .nav-card:hover .card-desc {
+                opacity: 0.8;
+            }
             .footer-link:hover { 
                 opacity: 1; 
                 color: var(--accent-blue);
                 transform: scale(1.1);
             }
         }
-        /* 移动端触摸反馈 */
+
+        /* 统一移动端触摸反馈 */
+        .hitokoto-capsule:active { 
+            transform: scale(0.90); 
+            background: rgba(255,255,255,0.2); 
+        }
+        @media (prefers-color-scheme: light) {
+            .hitokoto-capsule:active {
+                background: rgba(0, 0, 0, 0.15);
+            }
+        }
+        .nav-card:active {
+            transform: scale(0.96);
+            background: rgba(255, 255, 255, 0.2);
+        }
+        @media (prefers-color-scheme: light) {
+            .nav-card:active {
+                background: rgba(0, 0, 0, 0.15);
+            }
+        }
         .footer-link:active {
             transform: scale(0.9);
             opacity: 1;
@@ -244,18 +346,18 @@
         }
     </style>
 </head>
-<body id="main-body">
+<body>
     <div id="bg-layer"></div>
     <div class="overlay"></div>
     <div class="container">
         <header>
             <h1 class="main-title">山本小面包🍞的导航页</h1>
-            <div class="hitokoto-capsule" id="hitokoto-btn">
+            <div class="hitokoto-capsule interactive-element" id="hitokoto-btn">
                 <span id="hitokoto-text">正在捕捉...</span>
             </div>
         </header>
         <main>
-            <div class="search-wrapper">
+            <div class="search-wrapper interactive-element">
                 <img src="https://picui.ogmua.cn/s1/2026/03/30/69c94d3fbf8c8.webp" alt="Bing">
                 <input type="text" id="search-input" placeholder="在 Bing 上搜索" autocomplete="off">
             </div>
@@ -263,64 +365,66 @@
         </main>
         <footer>
             <div class="footer-glass">
-                <a id="download-bg" class="footer-link" href="#" target="_blank">📥 下载壁纸</a>
-                <span id="refresh-bg" class="footer-link">🔄 切换背景</span>
+                <a id="download-bg" class="footer-link interactive-element" target="_blank">📥 下载壁纸</a>
+                <span id="refresh-bg" class="footer-link interactive-element">🔄 切换背景</span>
             </div>
         </footer>
     </div>
 
     <script>
-        // 防抖函数（防重复点击误触）
+        // 防抖函数
         const debounce = (fn, delay = 300) => {
             let timer = null;
             return (...args) => {
                 clearTimeout(timer);
-                timer = setTimeout(() => fn.apply(this, args), delay);
+                timer = setTimeout(() => fn(...args), delay);
             };
         };
 
-        // 滚动入场动画观察者
-        const createIntersectionObserver = () => {
-            return new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('show');
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, {
-                rootMargin: '0px 0px -100px 0px',
-                threshold: 0.1
-            });
+        // DOM节点提前缓存
+        const dom = {
+            body: document.body,
+            bgLayer: document.getElementById('bg-layer'),
+            downloadBg: document.getElementById('download-bg'),
+            refreshBg: document.getElementById('refresh-bg'),
+            hitokotoBtn: document.getElementById('hitokoto-btn'),
+            hitokotoText: document.getElementById('hitokoto-text'),
+            hitokotoCapsule: document.getElementById('hitokoto-btn'),
+            searchInput: document.getElementById('search-input'),
+            navContainer: document.getElementById('nav-container')
         };
-        const observer = createIntersectionObserver();
+
+        // 滚动入场动画观察者
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('show');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            rootMargin: '0px 0px -100px 0px',
+            threshold: 0.1
+        });
 
         // 设备判断
-        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-        if (isMobile) document.getElementById('main-body').classList.add('mobile-mode');
+        const isMobile = /Android|iPhone|iPad|iPod|Macintosh/i.test(navigator.userAgent) && 'ontouchend' in window;
+        if (isMobile) dom.body.classList.add('mobile-mode');
 
         // 背景尺寸适配
         const fixBg = () => {
-            const bgLayer = document.getElementById('bg-layer');
-            const screenHeight = window.screen.height || window.innerHeight;
-            bgLayer.style.height = `${screenHeight + 100}px`;
-            if (isMobile) {
-                document.body.style.minHeight = `${screenHeight}px`;
-            }
+            const screenHeight = window.innerHeight;
+            dom.bgLayer.style.height = `${screenHeight + 100}px`;
         };
         fixBg();
-        window.addEventListener('orientationchange', () => setTimeout(fixBg, 200));
         window.addEventListener('resize', debounce(fixBg, 200));
 
         // 背景加载与切换
         const loadBg = debounce(async () => {
             const api = isMobile ? 'https://api.yppp.net/pe.php' : 'https://api.yppp.net/pc.php';
-            const bg = document.getElementById('bg-layer');
-            const downloadBtn = document.getElementById('download-bg');
-            
             try {
-                bg.style.filter = 'blur(10px)';
-                bg.style.opacity = 0;
+                dom.bgLayer.style.filter = 'blur(10px)';
+                dom.bgLayer.style.opacity = 0;
 
                 const res = await fetch(api);
                 const realUrl = res.url;
@@ -328,77 +432,125 @@
                 img.src = realUrl;
                 
                 img.onload = () => {
-                    bg.style.backgroundImage = `url('${realUrl}')`;
-                    bg.style.filter = 'blur(0px)';
-                    bg.style.opacity = 1;
-                    downloadBtn.href = realUrl;
+                    dom.bgLayer.style.backgroundImage = `url('${realUrl}')`;
+                    dom.bgLayer.style.filter = 'blur(0px)';
+                    dom.bgLayer.style.opacity = 1;
+                    dom.downloadBg.href = realUrl;
                 };
             } catch (e) {
                 console.error("背景加载失败", e);
             }
         }, 500);
 
-        // 初始化背景
+        // 初始化背景与切换事件
         loadBg();
-        // 切换背景
-        document.getElementById('refresh-bg').onclick = loadBg;
+        dom.refreshBg.onclick = loadBg;
 
-        // 一言功能
+        // 一言动画核心逻辑
+        let isHitokotoAnimating = false;
+        const FADE_DURATION = 220;
+
+        const fadeOutText = () => {
+            return new Promise((resolve) => {
+                dom.hitokotoText.classList.remove('fade-in');
+                dom.hitokotoText.classList.add('fade-out');
+                setTimeout(resolve, FADE_DURATION);
+            });
+        };
+
+        const fadeInText = () => {
+            return new Promise((resolve) => {
+                void dom.hitokotoText.offsetHeight;
+                dom.hitokotoText.classList.remove('fade-out');
+                dom.hitokotoText.classList.add('fade-in');
+                setTimeout(resolve, FADE_DURATION);
+            });
+        };
+
+        const fixCapsuleHeight = () => {
+            dom.hitokotoCapsule.style.height = 'auto';
+            const textHeight = dom.hitokotoText.offsetHeight;
+            dom.hitokotoCapsule.style.height = `${Math.max(textHeight + 20, 38)}px`;
+        };
+
         const fetchHitokoto = debounce(async () => {
-            const el = document.getElementById('hitokoto-text');
-            el.innerText = "正在捕捉...";
+            if (isHitokotoAnimating) return;
+            isHitokotoAnimating = true;
+
             try {
+                await fadeOutText();
+                dom.hitokotoText.innerText = "正在捕捉...";
+                fixCapsuleHeight();
+                await fadeInText();
+
                 const res = await fetch('https://v1.hitokoto.cn?c=a&max_length=25');
                 const data = await res.json();
-                el.innerText = `${data.hitokoto} —— 「${data.from}」`;
-            } catch (e) { 
-                el.innerText = "纵使疾风起，人生不言弃。"; 
+                const newText = `${data.hitokoto} —— 「${data.from}」`;
+
+                await fadeOutText();
+                dom.hitokotoText.innerText = newText;
+                fixCapsuleHeight();
+                await fadeInText();
+
+                dom.hitokotoCapsule.style.height = 'auto';
+
+            } catch (e) {
+                await fadeOutText();
+                dom.hitokotoText.innerText = "纵使疾风起，人生不言弃。";
+                fixCapsuleHeight();
+                await fadeInText();
+                dom.hitokotoCapsule.style.height = 'auto';
+            } finally {
+                isHitokotoAnimating = false;
             }
         }, 500);
 
         // 初始化一言
-        fetchHitokoto();
-        // 点击刷新
-        document.getElementById('hitokoto-btn').onclick = fetchHitokoto;
+        window.addEventListener('DOMContentLoaded', () => {
+            dom.hitokotoText.classList.add('fade-out');
+            fetchHitokoto();
+        });
+        window.addEventListener('resize', debounce(() => {
+            dom.hitokotoCapsule.style.height = 'auto';
+        }, 200));
+        dom.hitokotoBtn.onclick = fetchHitokoto;
 
         // 搜索功能
         const handleSearch = debounce((keyword) => {
             if (keyword.trim()) {
-                window.open(`https://www.bing.com/search?q=${encodeURIComponent(keyword)}`, '_blank');
+                window.open(`https://www.bing.com/search?q=${encodeURIComponent(keyword)}`, '_blank', 'noopener noreferrer');
             }
         }, 300);
 
-        document.getElementById('search-input').onkeypress = (e) => {
+        dom.searchInput.onkeypress = (e) => {
             if (e.key === 'Enter') {
                 handleSearch(e.target.value);
-                e.target.blur(); // 移动端回车收起键盘
+                e.target.blur();
             }
         };
 
         // 导航渲染
         const renderNav = async () => {
-            const container = document.getElementById('nav-container');
             try {
                 const res = await fetch('./config.yml');
                 const yamlText = await res.text();
                 const config = jsyaml.load(yamlText);
 
                 config.categories.forEach(cat => {
-                    // 分类标题
                     const h2 = document.createElement('h2');
                     h2.className = 'category-title';
                     h2.innerText = cat.name;
-                    container.appendChild(h2);
+                    dom.navContainer.appendChild(h2);
 
-                    // 导航网格
                     const grid = document.createElement('div');
                     grid.className = 'nav-grid';
 
                     cat.links.forEach(link => {
                         const a = document.createElement('a');
-                        a.className = 'nav-card';
+                        a.className = 'nav-card interactive-element';
                         a.href = link.url; 
                         a.target = '_blank';
+                        a.rel = 'noopener noreferrer';
                         a.innerHTML = `
                             <div class="card-title">${link.title}</div>
                             <div class="card-desc">${link.desc}</div>
@@ -406,20 +558,20 @@
                         observer.observe(a);
                         grid.appendChild(a);
                     });
-                    container.appendChild(grid);
+                    dom.navContainer.appendChild(grid);
                 });
             } catch (e) {
-                console.error("Config error", e);
+                console.error("导航配置加载失败", e);
+                dom.navContainer.innerHTML = '<p style="text-align:center;padding:20px;color:var(--text-color);opacity:0.6;">导航配置加载失败，请检查config.yml文件</p>';
             }
         };
         renderNav();
 
-        // 移动端优化：页面滚动时关闭键盘
+        // 移动端优化：滚动时收起键盘
         if (isMobile) {
             window.addEventListener('scroll', () => {
-                const activeElement = document.activeElement;
-                if (activeElement.tagName === 'INPUT') {
-                    activeElement.blur();
+                if (document.activeElement.tagName === 'INPUT') {
+                    document.activeElement.blur();
                 }
             }, { passive: true });
         }
