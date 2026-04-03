@@ -11,10 +11,12 @@
         :root {
             --liquid-bg: rgba(255, 255, 255, 0.1);
             --liquid-blur: blur(25px) saturate(200%);
-            --liquid-border: rgba(255, 255, 255, 0.18); /* 稍微加深边框以替代阴影 */
+            --liquid-border: rgba(255, 255, 255, 0.18);
             --text-color: #ffffff;
             --accent-blue: #4ea1ff;
             --overlay-color: rgba(0, 0, 0, 0.25);
+            --transition-normal: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            --transition-bounce: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         @media (prefers-color-scheme: dark) {
@@ -25,7 +27,12 @@
             }
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            -webkit-tap-highlight-color: transparent; 
+        }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
@@ -36,14 +43,16 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* 背景层：物理锁定防止缩放 */
+        /* 背景层 */
         #bg-layer {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 120vh;
             background-size: cover; background-position: center; background-repeat: no-repeat;
-            opacity: 0; transition: opacity 0.8s ease-in-out;
-            z-index: -2; transform: translate3d(0,0,0);
-            will-change: opacity;
+            opacity: 0; 
+            transition: opacity 0.8s ease-in-out, filter 0.4s ease;
+            z-index: -2; 
+            transform: translate3d(0,0,0);
+            will-change: opacity, transform;
         }
 
         .overlay {
@@ -57,16 +66,32 @@
         }
 
         header { text-align: center; margin-bottom: 40px; }
-        .main-title { font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 18px; }
+        .main-title { 
+            font-size: 2.5rem; font-weight: 800; 
+            letter-spacing: -1px; margin-bottom: 18px;
+            transition: var(--transition-bounce);
+        }
 
-        /* 搜索框：彻底去除阴影 */
+        /* 搜索框 */
         .search-wrapper {
             display: flex; align-items: center;
-            background: var(--liquid-bg); backdrop-filter: var(--liquid-blur); -webkit-backdrop-filter: var(--liquid-blur);
-            border-radius: 50px; padding: 16px 30px; width: 100%; max-width: 680px; margin: 0 auto 50px auto;
+            background: var(--liquid-bg); 
+            backdrop-filter: var(--liquid-blur); 
+            -webkit-backdrop-filter: var(--liquid-blur);
+            border-radius: 50px; padding: 16px 30px; 
+            width: 100%; max-width: 680px; 
+            margin: 0 auto 50px auto;
             border: 1px solid var(--liquid-border);
-            box-shadow: none; /* 强制无阴影 */
-            transition: transform 0.4s cubic-bezier(0.2, 0, 0.2, 1), background-color 0.4s, border-color 0.4s; 
+            box-shadow: none;
+            transition: var(--transition-bounce); 
+        }
+        /* 桌面端hover效果 */
+        @media (hover: hover) and (pointer: fine) {
+            .search-wrapper:hover {
+                transform: scale(1.02);
+                background: rgba(255, 255, 255, 0.12);
+                border-color: rgba(255, 255, 255, 0.25);
+            }
         }
         .search-wrapper:focus-within {
             transform: scale(1.05);
@@ -74,20 +99,43 @@
             border-color: var(--accent-blue);
             box-shadow: none;
         }
-        .search-wrapper img { width: 22px; height: 22px; margin-right: 14px; }
-        .search-wrapper input { flex: 1; background: transparent; border: none; color: #fff; outline: none; font-size: 1.15rem; font-weight: 500; }
-
-        /* 全局扁平化组件 */
-        .hitokoto-capsule, .nav-card, .footer-glass {
-            background: var(--liquid-bg); backdrop-filter: var(--liquid-blur); -webkit-backdrop-filter: var(--liquid-blur);
-            border: 1px solid var(--liquid-border); box-shadow: none;
+        .search-wrapper img { width: 22px; height: 22px; margin-right: 14px; pointer-events: none; }
+        .search-wrapper input { 
+            flex: 1; background: transparent; 
+            border: none; color: #fff; 
+            outline: none; font-size: 1.15rem; 
+            font-weight: 500;
         }
 
+        /* 全局组件基础样式 */
+        .hitokoto-capsule, .nav-card, .footer-glass {
+            background: var(--liquid-bg); 
+            backdrop-filter: var(--liquid-blur); 
+            -webkit-backdrop-filter: var(--liquid-blur);
+            border: 1px solid var(--liquid-border); 
+            box-shadow: none;
+        }
+
+        /* 一言胶囊 */
         .hitokoto-capsule {
             display: inline-block; padding: 10px 24px; border-radius: 40px;
-            cursor: pointer; max-width: 95%; transition: transform 0.2s, background 0.4s;
+            cursor: pointer; max-width: 95%; 
+            transition: var(--transition-bounce);
+            user-select: none;
         }
-        .hitokoto-capsule:active { transform: scale(0.90); background: rgba(255,255,255,0.15); }
+        /* 桌面端hover效果 */
+        @media (hover: hover) and (pointer: fine) {
+            .hitokoto-capsule:hover {
+                transform: scale(1.05);
+                background: rgba(255, 255, 255, 0.15);
+                border-color: var(--accent-blue);
+            }
+        }
+        /* 移动端触摸反馈 */
+        .hitokoto-capsule:active { 
+            transform: scale(0.90); 
+            background: rgba(255,255,255,0.2); 
+        }
         #hitokoto-text { font-size: 0.92rem; font-weight: 500; }
 
         .category-title {
@@ -95,27 +143,105 @@
             font-weight: 700; border-left: 4px solid var(--accent-blue);
             padding-left: 14px; border-radius: 2px;
         }
-        .nav-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .nav-card {
-            border-radius: 24px; padding: 24px; text-decoration: none;
-            color: white; opacity: 0; transform: translateY(20px);
-            transition: background 0.3s, transform 0.3s;
+
+        .nav-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+            gap: 20px; 
         }
-        .nav-card.show { animation: reveal 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-        @keyframes reveal { to { opacity: 1; transform: translateY(0); } }
-        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
-        .card-desc { font-size: 0.88rem; color: rgba(255, 255, 255, 0.55); line-height: 1.5; }
+
+        /* 导航卡片核心交互 */
+        .nav-card {
+            border-radius: 24px; padding: 24px; 
+            text-decoration: none; color: white; 
+            opacity: 0; transform: translateY(30px);
+            transition: var(--transition-bounce);
+            user-select: none;
+            overflow: hidden;
+            position: relative;
+        }
+        /* 滚动入场动画 */
+        .nav-card.show { 
+            opacity: 1; 
+            transform: translateY(0); 
+        }
+        /* 桌面端hover效果 */
+        @media (hover: hover) and (pointer: fine) {
+            .nav-card:hover {
+                transform: translateY(-8px) scale(1.02);
+                background: rgba(255, 255, 255, 0.15);
+                border-color: var(--accent-blue);
+            }
+            .nav-card:hover .card-title {
+                color: var(--accent-blue);
+            }
+            .nav-card:hover .card-desc {
+                color: rgba(255, 255, 255, 0.8);
+            }
+        }
+        /* 移动端触摸反馈 */
+        .nav-card:active {
+            transform: scale(0.96);
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .card-title { 
+            font-size: 1.1rem; font-weight: 700; 
+            margin-bottom: 8px;
+            transition: var(--transition-normal);
+        }
+        .card-desc { 
+            font-size: 0.88rem; 
+            color: rgba(255, 255, 255, 0.55); 
+            line-height: 1.5;
+            transition: var(--transition-normal);
+        }
 
         /* 移动端适配 */
         body.mobile-mode .main-title { font-size: 1.4rem; }
-        body.mobile-mode .nav-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        body.mobile-mode .nav-card { padding: 18px; border-radius: 18px; }
-        body.mobile-mode .card-desc { -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+        body.mobile-mode .nav-grid { 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 12px; 
+        }
+        body.mobile-mode .nav-card { 
+            padding: 18px; 
+            border-radius: 18px; 
+        }
+        body.mobile-mode .card-desc { 
+            -webkit-line-clamp: 2; 
+            display: -webkit-box; 
+            -webkit-box-orient: vertical; 
+            overflow: hidden; 
+        }
 
         footer { margin: 60px 0 30px 0; text-align: center; }
-        .footer-glass { display: inline-flex; gap: 20px; padding: 14px 35px; border-radius: 50px; }
-        .footer-link { color: #fff; text-decoration: none; font-size: 0.85rem; font-weight: 600; opacity: 0.7; transition: 0.3s; }
-        .footer-link:hover { opacity: 1; color: var(--accent-blue); }
+        .footer-glass { 
+            display: inline-flex; gap: 20px; 
+            padding: 14px 35px; 
+            border-radius: 50px; 
+        }
+        /* 底部链接交互 */
+        .footer-link { 
+            color: #fff; text-decoration: none; 
+            font-size: 0.85rem; font-weight: 600; 
+            opacity: 0.7; 
+            transition: var(--transition-bounce);
+            cursor: pointer;
+            user-select: none;
+        }
+        /* 桌面端hover效果 */
+        @media (hover: hover) and (pointer: fine) {
+            .footer-link:hover { 
+                opacity: 1; 
+                color: var(--accent-blue);
+                transform: scale(1.1);
+            }
+        }
+        /* 移动端触摸反馈 */
+        .footer-link:active {
+            transform: scale(0.9);
+            opacity: 1;
+            color: var(--accent-blue);
+        }
     </style>
 </head>
 <body id="main-body">
@@ -124,7 +250,9 @@
     <div class="container">
         <header>
             <h1 class="main-title">山本小面包🍞的导航页</h1>
-            <div class="hitokoto-capsule" id="hitokoto-btn"><span id="hitokoto-text">正在捕捉...</span></div>
+            <div class="hitokoto-capsule" id="hitokoto-btn">
+                <span id="hitokoto-text">正在捕捉...</span>
+            </div>
         </header>
         <main>
             <div class="search-wrapper">
@@ -136,89 +264,165 @@
         <footer>
             <div class="footer-glass">
                 <a id="download-bg" class="footer-link" href="#" target="_blank">📥 下载壁纸</a>
-                <span id="refresh-bg" class="footer-link" style="cursor:pointer">🔄 切换背景</span>
+                <span id="refresh-bg" class="footer-link">🔄 切换背景</span>
             </div>
         </footer>
     </div>
 
     <script>
-        // 核心逻辑：精简高效
+        // 防抖函数（防重复点击误触）
+        const debounce = (fn, delay = 300) => {
+            let timer = null;
+            return (...args) => {
+                clearTimeout(timer);
+                timer = setTimeout(() => fn.apply(this, args), delay);
+            };
+        };
+
+        // 滚动入场动画观察者
+        const createIntersectionObserver = () => {
+            return new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('show');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, {
+                rootMargin: '0px 0px -100px 0px',
+                threshold: 0.1
+            });
+        };
+        const observer = createIntersectionObserver();
+
+        // 设备判断
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         if (isMobile) document.getElementById('main-body').classList.add('mobile-mode');
 
+        // 背景尺寸适配
         const fixBg = () => {
-            document.getElementById('bg-layer').style.height = ((window.screen.height || window.innerHeight) + 100) + 'px';
+            const bgLayer = document.getElementById('bg-layer');
+            const screenHeight = window.screen.height || window.innerHeight;
+            bgLayer.style.height = `${screenHeight + 100}px`;
+            if (isMobile) {
+                document.body.style.minHeight = `${screenHeight}px`;
+            }
         };
         fixBg();
         window.addEventListener('orientationchange', () => setTimeout(fixBg, 200));
+        window.addEventListener('resize', debounce(fixBg, 200));
 
-        const loadBg = async () => {
+        // 背景加载与切换
+        const loadBg = debounce(async () => {
             const api = isMobile ? 'https://api.yppp.net/pe.php' : 'https://api.yppp.net/pc.php';
             const bg = document.getElementById('bg-layer');
+            const downloadBtn = document.getElementById('download-bg');
+            
             try {
+                bg.style.filter = 'blur(10px)';
+                bg.style.opacity = 0;
+
                 const res = await fetch(api);
                 const realUrl = res.url;
                 const img = new Image();
                 img.src = realUrl;
+                
                 img.onload = () => {
                     bg.style.backgroundImage = `url('${realUrl}')`;
+                    bg.style.filter = 'blur(0px)';
                     bg.style.opacity = 1;
-                    document.getElementById('download-bg').href = realUrl;
+                    downloadBtn.href = realUrl;
                 };
-            } catch (e) { bg.style.backgroundImage = `url('${api}')`; bg.style.opacity = 1; }
-        };
-        loadBg();
-        document.getElementById('refresh-bg').onclick = () => {
-            document.getElementById('bg-layer').style.opacity = 0;
-            setTimeout(loadBg, 400);
-        };
+            } catch (e) {
+                console.error("背景加载失败", e);
+            }
+        }, 500);
 
-        const fetchHitokoto = async () => {
+        // 初始化背景
+        loadBg();
+        // 切换背景
+        document.getElementById('refresh-bg').onclick = loadBg;
+
+        // 一言功能
+        const fetchHitokoto = debounce(async () => {
             const el = document.getElementById('hitokoto-text');
+            el.innerText = "正在捕捉...";
             try {
                 const res = await fetch('https://v1.hitokoto.cn?c=a&max_length=25');
                 const data = await res.json();
                 el.innerText = `${data.hitokoto} —— 「${data.from}」`;
-            } catch (e) { el.innerText = "纵使疾风起，人生不言弃。"; }
-        };
+            } catch (e) { 
+                el.innerText = "纵使疾风起，人生不言弃。"; 
+            }
+        }, 500);
+
+        // 初始化一言
         fetchHitokoto();
+        // 点击刷新
         document.getElementById('hitokoto-btn').onclick = fetchHitokoto;
 
+        // 搜索功能
+        const handleSearch = debounce((keyword) => {
+            if (keyword.trim()) {
+                window.open(`https://www.bing.com/search?q=${encodeURIComponent(keyword)}`, '_blank');
+            }
+        }, 300);
+
         document.getElementById('search-input').onkeypress = (e) => {
-            if (e.key === 'Enter' && e.target.value.trim()) {
-                window.open(`https://www.bing.com/search?q=${encodeURIComponent(e.target.value)}`, '_blank');
+            if (e.key === 'Enter') {
+                handleSearch(e.target.value);
+                e.target.blur(); // 移动端回车收起键盘
             }
         };
 
+        // 导航渲染
         const renderNav = async () => {
             const container = document.getElementById('nav-container');
             try {
                 const res = await fetch('./config.yml');
                 const yamlText = await res.text();
                 const config = jsyaml.load(yamlText);
-                let delay = 0;
+
                 config.categories.forEach(cat => {
+                    // 分类标题
                     const h2 = document.createElement('h2');
                     h2.className = 'category-title';
                     h2.innerText = cat.name;
                     container.appendChild(h2);
+
+                    // 导航网格
                     const grid = document.createElement('div');
                     grid.className = 'nav-grid';
+
                     cat.links.forEach(link => {
                         const a = document.createElement('a');
                         a.className = 'nav-card';
-                        a.href = link.url; a.target = '_blank';
-                        a.innerHTML = `<div class="card-title">${link.title}</div><div class="card-desc">${link.desc}</div>`;
-                        a.style.animationDelay = `${delay * 0.05}s`;
-                        delay++;
+                        a.href = link.url; 
+                        a.target = '_blank';
+                        a.innerHTML = `
+                            <div class="card-title">${link.title}</div>
+                            <div class="card-desc">${link.desc}</div>
+                        `;
+                        observer.observe(a);
                         grid.appendChild(a);
-                        requestAnimationFrame(() => a.classList.add('show'));
                     });
                     container.appendChild(grid);
                 });
-            } catch (e) { console.error("Config error"); }
+            } catch (e) {
+                console.error("Config error", e);
+            }
         };
         renderNav();
+
+        // 移动端优化：页面滚动时关闭键盘
+        if (isMobile) {
+            window.addEventListener('scroll', () => {
+                const activeElement = document.activeElement;
+                if (activeElement.tagName === 'INPUT') {
+                    activeElement.blur();
+                }
+            }, { passive: true });
+        }
     </script>
 </body>
 </html>
