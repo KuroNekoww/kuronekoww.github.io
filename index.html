@@ -7,38 +7,34 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js" defer></script>
 
     <style>
-        /* 声明支持双主题模式 */
         :root {
             color-scheme: light dark;
-            /* 动画时长统一管控 */
             --hitokoto-fade-duration: 220ms;
             --transition-normal: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             --transition-bounce: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        /* ===================== 浅色模式（系统默认）变量 ===================== */
         @media (prefers-color-scheme: light) {
             :root {
                 --liquid-bg: rgba(0, 0, 0, 0.06);
                 --liquid-blur: blur(25px) saturate(200%);
-                --liquid-border: rgba(0, 0, 0, 0.12); /* 深色半透明边框，浅色背景下清晰可见 */
-                --text-color: #1d1d1f; /* 深色文字，浅色背景下可读 */
-                --accent-blue: #007aff; /* 适配浅色模式的品牌蓝 */
-                --overlay-color: rgba(255, 255, 255, 0.4); /* 浅色遮罩，保证动态背景上的文字可读 */
-                --page-bg: #f5f5f7; /* 浅色模式页面背景 */
+                --liquid-border: rgba(0, 0, 0, 0.12);
+                --text-color: #1d1d1f;
+                --accent-blue: #007aff;
+                --overlay-color: rgba(255, 255, 255, 0.4);
+                --page-bg: #f5f5f7;
             }
         }
 
-        /* ===================== 深色模式变量 ===================== */
         @media (prefers-color-scheme: dark) {
             :root {
                 --liquid-bg: rgba(255, 255, 255, 0.06);
                 --liquid-blur: blur(25px) saturate(200%);
-                --liquid-border: rgba(255, 255, 255, 0.12); /* 白色半透明边框，深色背景下清晰可见 */
-                --text-color: #ffffff; /* 白色文字，深色背景下可读 */
-                --accent-blue: #4ea1ff; /* 适配深色模式的品牌蓝 */
-                --overlay-color: rgba(0, 0, 0, 0.5); /* 深色遮罩，保证动态背景上的文字可读 */
-                --page-bg: #000000; /* 深色模式页面背景 */
+                --liquid-border: rgba(255, 255, 255, 0.12);
+                --text-color: #ffffff;
+                --accent-blue: #4ea1ff;
+                --overlay-color: rgba(0, 0, 0, 0.5);
+                --page-bg: #000000;
             }
         }
 
@@ -57,12 +53,11 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
             color: var(--text-color);
-            background-color: var(--page-bg); /* 背景随主题切换 */
+            background-color: var(--page-bg);
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
         }
 
-        /* 背景层 */
         #bg-layer {
             position: fixed;
             top: 0; left: 0; 
@@ -80,7 +75,7 @@
             top: 0; left: 0; 
             width: 100vw; 
             height: 100vh;
-            background: var(--overlay-color); /* 遮罩随主题切换 */
+            background: var(--overlay-color);
             z-index: -1; 
             pointer-events: none;
         }
@@ -105,16 +100,14 @@
             margin-bottom: 18px;
         }
 
-        /* 全局毛玻璃组件样式（边框随主题自动适配） */
         .search-wrapper, .hitokoto-capsule, .nav-card, .footer-glass {
             background: var(--liquid-bg); 
             backdrop-filter: var(--liquid-blur); 
             -webkit-backdrop-filter: var(--liquid-blur);
-            border: 1px solid var(--liquid-border); /* 边框颜色随主题切换，两个模式下对比度一致 */
+            border: 1px solid var(--liquid-border);
             box-shadow: none;
         }
 
-        /* 搜索框 */
         .search-wrapper {
             display: flex; 
             align-items: center;
@@ -139,7 +132,7 @@
             flex: 1; 
             background: transparent; 
             border: none; 
-            color: var(--text-color); /* 输入框文字随主题变色 */
+            color: var(--text-color);
             outline: none; 
             font-size: 1.15rem; 
             font-weight: 500;
@@ -149,7 +142,6 @@
             opacity: 0.5;
         }
 
-        /* 一言胶囊 */
         .hitokoto-capsule {
             display: inline-flex;
             align-items: center;
@@ -185,7 +177,7 @@
 
         .category-title {
             font-size: 1.1rem; 
-            color: var(--text-color); /* 标题颜色随主题变色 */
+            color: var(--text-color);
             margin: 35px 0 20px 0;
             font-weight: 700; 
             border-left: 4px solid var(--accent-blue);
@@ -199,12 +191,11 @@
             gap: 20px; 
         }
 
-        /* 导航卡片核心样式 */
         .nav-card {
             border-radius: 24px; 
             padding: 24px; 
             text-decoration: none; 
-            color: var(--text-color); /* 卡片文字随主题变色 */
+            color: var(--text-color);
             opacity: 0; 
             transform: translateY(30px);
             overflow: hidden;
@@ -223,12 +214,11 @@
         .card-desc { 
             font-size: 0.88rem; 
             color: var(--text-color);
-            opacity: 0.55; /* 用透明度控制次要文字，适配双主题 */
+            opacity: 0.55;
             line-height: 1.5;
             transition: var(--transition-normal);
         }
 
-        /* 移动端适配 */
         body.mobile-mode .main-title { 
             font-size: 1.4rem; 
         }
@@ -264,7 +254,7 @@
             border-radius: 50px; 
         }
         .footer-link { 
-            color: var(--text-color); /* 底部链接文字随主题变色 */
+            color: var(--text-color);
             text-decoration: none; 
             font-size: 0.85rem; 
             font-weight: 600; 
@@ -273,14 +263,12 @@
             transition: var(--transition-bounce);
         }
 
-        /* 统一桌面端hover交互 */
         @media (hover: hover) and (pointer: fine) {
             .search-wrapper:hover {
                 transform: scale(1.02);
                 background: rgba(255, 255, 255, 0.12);
                 border-color: rgba(255, 255, 255, 0.25);
             }
-            /* 浅色模式hover适配 */
             @media (prefers-color-scheme: light) {
                 .search-wrapper:hover {
                     background: rgba(0, 0, 0, 0.08);
@@ -320,7 +308,6 @@
             }
         }
 
-        /* 统一移动端触摸反馈 */
         .hitokoto-capsule:active { 
             transform: scale(0.90); 
             background: rgba(255,255,255,0.2); 
@@ -372,7 +359,6 @@
     </div>
 
     <script>
-        // 防抖函数
         const debounce = (fn, delay = 300) => {
             let timer = null;
             return (...args) => {
@@ -381,7 +367,6 @@
             };
         };
 
-        // DOM节点提前缓存
         const dom = {
             body: document.body,
             bgLayer: document.getElementById('bg-layer'),
@@ -389,12 +374,10 @@
             refreshBg: document.getElementById('refresh-bg'),
             hitokotoBtn: document.getElementById('hitokoto-btn'),
             hitokotoText: document.getElementById('hitokoto-text'),
-            hitokotoCapsule: document.getElementById('hitokoto-btn'),
             searchInput: document.getElementById('search-input'),
             navContainer: document.getElementById('nav-container')
         };
 
-        // 滚动入场动画观察者
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -407,20 +390,14 @@
             threshold: 0.1
         });
 
-        // 设备判断
         const isMobile = /Android|iPhone|iPad|iPod|Macintosh/i.test(navigator.userAgent) && 'ontouchend' in window;
         if (isMobile) dom.body.classList.add('mobile-mode');
 
-        // ==========================
-        // 背景尺寸适配（核心修复点）
-        // ==========================
+        // 背景尺寸锁定逻辑
         let lastWidth = window.innerWidth;
         const fixBg = () => {
             const currentWidth = window.innerWidth;
-            // 仅在宽度发生改变（横竖屏切换）或初始加载时执行高度重新计算
-            // 这样就能完全免疫移动端键盘弹起导致的高度（innerHeight）变化
             if (currentWidth !== lastWidth || !dom.bgLayer.style.height) {
-                // 优先使用屏幕物理高度
                 const screenHeight = window.screen.height || window.innerHeight;
                 dom.bgLayer.style.height = `${screenHeight + 100}px`;
                 lastWidth = currentWidth;
@@ -429,18 +406,15 @@
         fixBg();
         window.addEventListener('resize', debounce(fixBg, 200));
 
-        // 背景加载与切换
         const loadBg = debounce(async () => {
             const api = isMobile ? 'https://api.yppp.net/pe.php' : 'https://api.yppp.net/pc.php';
             try {
                 dom.bgLayer.style.filter = 'blur(10px)';
                 dom.bgLayer.style.opacity = 0;
-
                 const res = await fetch(api);
                 const realUrl = res.url;
                 const img = new Image();
                 img.src = realUrl;
-                
                 img.onload = () => {
                     dom.bgLayer.style.backgroundImage = `url('${realUrl}')`;
                     dom.bgLayer.style.filter = 'blur(0px)';
@@ -452,11 +426,9 @@
             }
         }, 500);
 
-        // 初始化背景与切换事件
         loadBg();
         dom.refreshBg.onclick = loadBg;
 
-        // 一言动画核心逻辑
         let isHitokotoAnimating = false;
         const FADE_DURATION = 220;
 
@@ -478,54 +450,47 @@
         };
 
         const fixCapsuleHeight = () => {
-            dom.hitokotoCapsule.style.height = 'auto';
+            dom.hitokotoBtn.style.height = 'auto';
             const textHeight = dom.hitokotoText.offsetHeight;
-            dom.hitokotoCapsule.style.height = `${Math.max(textHeight + 20, 38)}px`;
+            dom.hitokotoBtn.style.height = `${Math.max(textHeight + 20, 38)}px`;
         };
 
         const fetchHitokoto = debounce(async () => {
             if (isHitokotoAnimating) return;
             isHitokotoAnimating = true;
-
             try {
                 await fadeOutText();
                 dom.hitokotoText.innerText = "正在捕捉...";
                 fixCapsuleHeight();
                 await fadeInText();
-
                 const res = await fetch('https://v1.hitokoto.cn?c=a&max_length=25');
                 const data = await res.json();
                 const newText = `${data.hitokoto} —— 「${data.from}」`;
-
                 await fadeOutText();
                 dom.hitokotoText.innerText = newText;
                 fixCapsuleHeight();
                 await fadeInText();
-
-                dom.hitokotoCapsule.style.height = 'auto';
-
+                dom.hitokotoBtn.style.height = 'auto';
             } catch (e) {
                 await fadeOutText();
                 dom.hitokotoText.innerText = "纵使疾风起，人生不言弃。";
                 fixCapsuleHeight();
                 await fadeInText();
-                dom.hitokotoCapsule.style.height = 'auto';
+                dom.hitokotoBtn.style.height = 'auto';
             } finally {
                 isHitokotoAnimating = false;
             }
         }, 500);
 
-        // 初始化一言
         window.addEventListener('DOMContentLoaded', () => {
             dom.hitokotoText.classList.add('fade-out');
             fetchHitokoto();
         });
         window.addEventListener('resize', debounce(() => {
-            dom.hitokotoCapsule.style.height = 'auto';
+            dom.hitokotoBtn.style.height = 'auto';
         }, 200));
         dom.hitokotoBtn.onclick = fetchHitokoto;
 
-        // 搜索功能
         const handleSearch = debounce((keyword) => {
             if (keyword.trim()) {
                 window.open(`https://www.bing.com/search?q=${encodeURIComponent(keyword)}`, '_blank', 'noopener noreferrer');
@@ -539,32 +504,25 @@
             }
         };
 
-        // 导航渲染
         const renderNav = async () => {
             try {
                 const res = await fetch('./config.yml');
                 const yamlText = await res.text();
                 const config = jsyaml.load(yamlText);
-
                 config.categories.forEach(cat => {
                     const h2 = document.createElement('h2');
                     h2.className = 'category-title';
                     h2.innerText = cat.name;
                     dom.navContainer.appendChild(h2);
-
                     const grid = document.createElement('div');
                     grid.className = 'nav-grid';
-
                     cat.links.forEach(link => {
                         const a = document.createElement('a');
                         a.className = 'nav-card interactive-element';
                         a.href = link.url; 
                         a.target = '_blank';
                         a.rel = 'noopener noreferrer';
-                        a.innerHTML = `
-                            <div class="card-title">${link.title}</div>
-                            <div class="card-desc">${link.desc}</div>
-                        `;
+                        a.innerHTML = `<div class="card-title">${link.title}</div><div class="card-desc">${link.desc}</div>`;
                         observer.observe(a);
                         grid.appendChild(a);
                     });
@@ -572,12 +530,10 @@
                 });
             } catch (e) {
                 console.error("导航配置加载失败", e);
-                dom.navContainer.innerHTML = '<p style="text-align:center;padding:20px;color:var(--text-color);opacity:0.6;">导航配置加载失败，请检查config.yml文件</p>';
             }
         };
         renderNav();
 
-        // 移动端优化：滚动时收起键盘
         if (isMobile) {
             window.addEventListener('scroll', () => {
                 if (document.activeElement.tagName === 'INPUT') {
