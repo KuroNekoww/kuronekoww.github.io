@@ -2,7 +2,13 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <!-- 修复核心1：viewport补充防止缩放配置，彻底禁止键盘弹出时页面缩放 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+    <!-- 预连接关键域名 -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://v1.hitokoto.cn">
     <title>山本小面包🍞的导航页</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js" defer></script>
 
@@ -14,6 +20,15 @@
             --hitokoto-fade-duration: 220ms;
             --transition-normal: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             --transition-bounce: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            /* 修复核心2：用dvh动态视口单位，兼容移动端键盘弹出场景 */
+            --viewport-height: 100dvh;
+        }
+
+        /* 不支持dvh的老旧设备降级 */
+        @supports not (height: 100dvh) {
+            :root {
+                --viewport-height: 100vh;
+            }
         }
 
         /* ===================== 浅色模式（系统默认）变量 ===================== */
@@ -21,11 +36,11 @@
             :root {
                 --liquid-bg: rgba(0, 0, 0, 0.06);
                 --liquid-blur: blur(25px) saturate(200%);
-                --liquid-border: rgba(0, 0, 0, 0.12); /* 深色半透明边框，浅色背景下清晰可见 */
-                --text-color: #1d1d1f; /* 深色文字，浅色背景下可读 */
-                --accent-blue: #007aff; /* 适配浅色模式的品牌蓝 */
-                --overlay-color: rgba(255, 255, 255, 0.4); /* 浅色遮罩，保证动态背景上的文字可读 */
-                --page-bg: #f5f5f7; /* 浅色模式页面背景 */
+                --liquid-border: rgba(0, 0, 0, 0.12);
+                --text-color: #1d1d1f;
+                --accent-blue: #007aff;
+                --overlay-color: rgba(255, 255, 255, 0.4);
+                --page-bg: #f5f5f7;
             }
         }
 
@@ -34,11 +49,11 @@
             :root {
                 --liquid-bg: rgba(255, 255, 255, 0.06);
                 --liquid-blur: blur(25px) saturate(200%);
-                --liquid-border: rgba(255, 255, 255, 0.12); /* 白色半透明边框，深色背景下清晰可见 */
-                --text-color: #ffffff; /* 白色文字，深色背景下可读 */
-                --accent-blue: #4ea1ff; /* 适配深色模式的品牌蓝 */
-                --overlay-color: rgba(0, 0, 0, 0.5); /* 深色遮罩，保证动态背景上的文字可读 */
-                --page-bg: #000000; /* 深色模式页面背景 */
+                --liquid-border: rgba(255, 255, 255, 0.12);
+                --text-color: #ffffff;
+                --accent-blue: #4ea1ff;
+                --overlay-color: rgba(0, 0, 0, 0.5);
+                --page-bg: #000000;
             }
         }
 
@@ -54,33 +69,55 @@
             user-select: none;
         }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
-            color: var(--text-color);
-            background-color: var(--page-bg); /* 背景随主题切换 */
+        html, body {
+            /* 修复核心3：固定页面根高度，禁止键盘弹出时根元素高度变化 */
+            height: 100%;
+            width: 100%;
             overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
         }
 
-        /* 背景层 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+            color: var(--text-color);
+            background-color: var(--page-bg);
+            -webkit-font-smoothing: antialiased;
+            /* 修复核心4：页面滚动容器固定，防止键盘弹出时页面整体滚动 */
+            overflow-y: auto;
+            overscroll-behavior-y: contain;
+            -webkit-overflow-scrolling: touch;
+            position: relative;
+        }
+
+        /* 修复核心5：背景层彻底重构，彻底解决键盘弹出放大问题 */
         #bg-layer {
             position: fixed;
-            top: 0; left: 0; 
-            width: 100vw;
+            /* 固定铺满整个设备视口，不受键盘弹出影响 */
+            inset: 0;
+            width: 100%;
+            /* 使用dvh单位，高度固定为设备完整视口高度，键盘弹出不变化 */
+            height: var(--viewport-height);
+            min-height: 100vh;
+            /* 背景图固定，不随容器/视口变化缩放 */
+            background-attachment: fixed;
             background-size: cover; 
-            background-position: center; 
+            background-position: center center; 
             background-repeat: no-repeat;
             opacity: 0; 
             transition: opacity 0.8s ease-in-out, filter 0.4s ease;
-            z-index: -2; 
+            z-index: -2;
+            /* 仅给需要动画的属性开启will-change */
+            will-change: opacity, background-image;
+            /* 禁止背景层被键盘弹出影响 */
+            pointer-events: none;
         }
 
         .overlay {
             position: fixed; 
-            top: 0; left: 0; 
-            width: 100vw; 
-            height: 100vh;
-            background: var(--overlay-color); /* 遮罩随主题切换 */
+            inset: 0;
+            width: 100%; 
+            height: var(--viewport-height);
+            min-height: 100vh;
+            background: var(--overlay-color);
             z-index: -1; 
             pointer-events: none;
         }
@@ -89,7 +126,8 @@
             max-width: 1100px; 
             margin: 0 auto; 
             padding: 40px 20px;
-            min-height: 100vh; 
+            /* 容器最小高度固定为视口高度，不受键盘影响 */
+            min-height: var(--viewport-height);
             position: relative; 
             z-index: 1;
         }
@@ -105,12 +143,12 @@
             margin-bottom: 18px;
         }
 
-        /* 全局毛玻璃组件样式（边框随主题自动适配） */
+        /* 全局毛玻璃组件样式 */
         .search-wrapper, .hitokoto-capsule, .nav-card, .footer-glass {
             background: var(--liquid-bg); 
             backdrop-filter: var(--liquid-blur); 
             -webkit-backdrop-filter: var(--liquid-blur);
-            border: 1px solid var(--liquid-border); /* 边框颜色随主题切换，两个模式下对比度一致 */
+            border: 1px solid var(--liquid-border);
             box-shadow: none;
         }
 
@@ -133,13 +171,15 @@
             width: 22px; 
             height: 22px; 
             margin-right: 14px; 
-            pointer-events: none; 
+            pointer-events: none;
+            loading="lazy"
+            decoding="async"
         }
         .search-wrapper input { 
             flex: 1; 
             background: transparent; 
             border: none; 
-            color: var(--text-color); /* 输入框文字随主题变色 */
+            color: var(--text-color);
             outline: none; 
             font-size: 1.15rem; 
             font-weight: 500;
@@ -185,7 +225,7 @@
 
         .category-title {
             font-size: 1.1rem; 
-            color: var(--text-color); /* 标题颜色随主题变色 */
+            color: var(--text-color);
             margin: 35px 0 20px 0;
             font-weight: 700; 
             border-left: 4px solid var(--accent-blue);
@@ -204,7 +244,7 @@
             border-radius: 24px; 
             padding: 24px; 
             text-decoration: none; 
-            color: var(--text-color); /* 卡片文字随主题变色 */
+            color: var(--text-color);
             opacity: 0; 
             transform: translateY(30px);
             overflow: hidden;
@@ -223,7 +263,7 @@
         .card-desc { 
             font-size: 0.88rem; 
             color: var(--text-color);
-            opacity: 0.55; /* 用透明度控制次要文字，适配双主题 */
+            opacity: 0.55;
             line-height: 1.5;
             transition: var(--transition-normal);
         }
@@ -238,7 +278,7 @@
         }
         body.mobile-mode .nav-card { 
             padding: 18px; 
-            border-radius: 18px; 
+            border-radius: 16px; 
         }
         body.mobile-mode .card-desc { 
             -webkit-line-clamp: 2; 
@@ -264,7 +304,7 @@
             border-radius: 50px; 
         }
         .footer-link { 
-            color: var(--text-color); /* 底部链接文字随主题变色 */
+            color: var(--text-color);
             text-decoration: none; 
             font-size: 0.85rem; 
             font-weight: 600; 
@@ -358,14 +398,14 @@
         </header>
         <main>
             <div class="search-wrapper interactive-element">
-                <img src="https://picui.ogmua.cn/s1/2026/03/30/69c94d3fbf8c8.webp" alt="Bing">
+                <img src="https://picui.ogmua.cn/s1/2026/03/30/69c94d3fbf8c8.webp" alt="Bing" onerror="this.style.display='none'">
                 <input type="text" id="search-input" placeholder="在 Bing 上搜索" autocomplete="off">
             </div>
             <div id="nav-container"></div>
         </main>
         <footer>
             <div class="footer-glass">
-                <a id="download-bg" class="footer-link interactive-element" target="_blank">📥 下载壁纸</a>
+                <a id="download-bg" class="footer-link interactive-element" target="_blank" rel="noopener noreferrer">📥 下载壁纸</a>
                 <span id="refresh-bg" class="footer-link interactive-element">🔄 切换背景</span>
             </div>
         </footer>
@@ -411,15 +451,20 @@
         const isMobile = /Android|iPhone|iPad|iPod|Macintosh/i.test(navigator.userAgent) && 'ontouchend' in window;
         if (isMobile) dom.body.classList.add('mobile-mode');
 
-        // 背景尺寸适配
-        const fixBg = () => {
-            const screenHeight = window.innerHeight;
-            dom.bgLayer.style.height = `${screenHeight + 100}px`;
+        // 修复核心6：彻底移除背景高度动态修改，键盘弹出不再改变背景尺寸
+        // 仅页面初始化时执行一次，不再监听resize修改背景
+        const initPage = () => {
+            // 仅做页面初始化适配，不再动态修改
+            document.documentElement.style.setProperty('--viewport-height', `${window.innerHeight}px`);
         };
-        fixBg();
-        window.addEventListener('resize', debounce(fixBg, 200));
+        initPage();
 
-        // 背景加载与切换
+        // 仅屏幕旋转时重新适配，键盘弹出不触发
+        window.addEventListener('orientationchange', debounce(() => {
+            setTimeout(initPage, 100);
+        }, 200));
+
+        // 背景加载与切换（不再修改背景高度，彻底解决放大问题）
         const loadBg = debounce(async () => {
             const api = isMobile ? 'https://api.yppp.net/pe.php' : 'https://api.yppp.net/pc.php';
             try {
@@ -430,6 +475,7 @@
                 const realUrl = res.url;
                 const img = new Image();
                 img.src = realUrl;
+                img.decoding = 'async';
                 
                 img.onload = () => {
                     dom.bgLayer.style.backgroundImage = `url('${realUrl}')`;
@@ -437,8 +483,14 @@
                     dom.bgLayer.style.opacity = 1;
                     dom.downloadBg.href = realUrl;
                 };
+
+                img.onerror = () => {
+                    throw new Error('背景图片加载失败');
+                };
             } catch (e) {
                 console.error("背景加载失败", e);
+                // 加载失败兜底，恢复透明不显示
+                dom.bgLayer.style.opacity = 0;
             }
         }, 500);
 
@@ -529,6 +581,17 @@
             }
         };
 
+        // 修复核心7：搜索框聚焦/失焦优化，防止iOS键盘弹出时页面滚动
+        dom.searchInput.addEventListener('focus', () => {
+            // 聚焦时禁止页面过度滚动
+            document.body.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+
+        dom.searchInput.addEventListener('blur', () => {
+            // 失焦时恢复页面状态
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
         // 导航渲染
         const renderNav = async () => {
             try {
@@ -575,6 +638,11 @@
                 }
             }, { passive: true });
         }
+
+        // 页面卸载时清理内存
+        window.addEventListener('beforeunload', () => {
+            observer && observer.disconnect();
+        });
     </script>
 </body>
 </html>
