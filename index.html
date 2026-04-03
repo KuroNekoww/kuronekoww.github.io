@@ -18,7 +18,6 @@
             :root {
                 --liquid-bg: rgba(0, 0, 0, 0.06);
                 --liquid-blur: blur(25px) saturate(200%);
-                --liquid-border: rgba(0, 0, 0, 0.12);
                 --text-color: #1d1d1f;
                 --accent-blue: #007aff;
                 --overlay-color: rgba(255, 255, 255, 0.4);
@@ -30,7 +29,6 @@
             :root {
                 --liquid-bg: rgba(255, 255, 255, 0.06);
                 --liquid-blur: blur(25px) saturate(200%);
-                --liquid-border: rgba(255, 255, 255, 0.12);
                 --text-color: #ffffff;
                 --accent-blue: #4ea1ff;
                 --overlay-color: rgba(0, 0, 0, 0.5);
@@ -100,11 +98,12 @@
             margin-bottom: 18px;
         }
 
+        /* 核心修改：移除 border 属性 */
         .search-wrapper, .hitokoto-capsule, .nav-card, .footer-glass {
             background: var(--liquid-bg); 
             backdrop-filter: var(--liquid-blur); 
             -webkit-backdrop-filter: var(--liquid-blur);
-            border: 1px solid var(--liquid-border);
+            border: none; 
             box-shadow: none;
         }
 
@@ -120,7 +119,6 @@
         .search-wrapper:focus-within {
             transform: scale(1.05);
             background: var(--liquid-bg);
-            border-color: var(--accent-blue);
         }
         .search-wrapper img { 
             width: 22px; 
@@ -267,18 +265,15 @@
             .search-wrapper:hover {
                 transform: scale(1.02);
                 background: rgba(255, 255, 255, 0.12);
-                border-color: rgba(255, 255, 255, 0.25);
             }
             @media (prefers-color-scheme: light) {
                 .search-wrapper:hover {
                     background: rgba(0, 0, 0, 0.08);
-                    border-color: rgba(0, 0, 0, 0.18);
                 }
             }
             .hitokoto-capsule:hover {
                 transform: scale(1.05);
                 background: rgba(255, 255, 255, 0.15);
-                border-color: var(--accent-blue);
             }
             @media (prefers-color-scheme: light) {
                 .hitokoto-capsule:hover {
@@ -288,7 +283,6 @@
             .nav-card:hover {
                 transform: translateY(-8px) scale(1.02);
                 background: rgba(255, 255, 255, 0.15);
-                border-color: var(--accent-blue);
             }
             @media (prefers-color-scheme: light) {
                 .nav-card:hover {
