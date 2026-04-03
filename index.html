@@ -2,49 +2,30 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <!-- 修复核心1：viewport补充防止缩放配置，彻底禁止键盘弹出时页面缩放 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
-    <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
-    <!-- 预连接关键域名 -->
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-    <link rel="preconnect" href="https://v1.hitokoto.cn">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>山本小面包🍞的导航页</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js" defer></script>
 
     <style>
-        /* 声明支持双主题模式 */
         :root {
             color-scheme: light dark;
-            /* 动画时长统一管控 */
             --hitokoto-fade-duration: 220ms;
             --transition-normal: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             --transition-bounce: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            /* 修复核心2：用dvh动态视口单位，兼容移动端键盘弹出场景 */
-            --viewport-height: 100dvh;
         }
 
-        /* 不支持dvh的老旧设备降级 */
-        @supports not (height: 100dvh) {
-            :root {
-                --viewport-height: 100vh;
-            }
-        }
-
-        /* ===================== 浅色模式（系统默认）变量 ===================== */
         @media (prefers-color-scheme: light) {
             :root {
-                --liquid-bg: rgba(0, 0, 0, 0.06);
+                --liquid-bg: rgba(0, 0, 0, 0.05);
                 --liquid-blur: blur(25px) saturate(200%);
-                --liquid-border: rgba(0, 0, 0, 0.12);
+                --liquid-border: rgba(0, 0, 0, 0.1);
                 --text-color: #1d1d1f;
                 --accent-blue: #007aff;
-                --overlay-color: rgba(255, 255, 255, 0.4);
+                --overlay-color: rgba(255, 255, 255, 0.35);
                 --page-bg: #f5f5f7;
             }
         }
 
-        /* ===================== 深色模式变量 ===================== */
         @media (prefers-color-scheme: dark) {
             :root {
                 --liquid-bg: rgba(255, 255, 255, 0.06);
@@ -52,338 +33,117 @@
                 --liquid-border: rgba(255, 255, 255, 0.12);
                 --text-color: #ffffff;
                 --accent-blue: #4ea1ff;
-                --overlay-color: rgba(0, 0, 0, 0.5);
+                --overlay-color: rgba(0, 0, 0, 0.45);
                 --page-bg: #000000;
             }
         }
 
-        * { 
-            box-sizing: border-box; 
-            margin: 0; 
-            padding: 0; 
-            -webkit-tap-highlight-color: transparent; 
-        }
-
-        .interactive-element {
-            transition: var(--transition-bounce);
-            user-select: none;
-        }
-
-        html, body {
-            /* 修复核心3：固定页面根高度，禁止键盘弹出时根元素高度变化 */
-            height: 100%;
-            width: 100%;
-            overflow-x: hidden;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
             color: var(--text-color);
             background-color: var(--page-bg);
+            overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
-            /* 修复核心4：页面滚动容器固定，防止键盘弹出时页面整体滚动 */
-            overflow-y: auto;
-            overscroll-behavior-y: contain;
-            -webkit-overflow-scrolling: touch;
-            position: relative;
         }
 
-        /* 修复核心5：背景层彻底重构，彻底解决键盘弹出放大问题 */
+        /* 背景层：彻底锁定 */
         #bg-layer {
             position: fixed;
-            /* 固定铺满整个设备视口，不受键盘弹出影响 */
-            inset: 0;
-            width: 100%;
-            /* 使用dvh单位，高度固定为设备完整视口高度，键盘弹出不变化 */
-            height: var(--viewport-height);
-            min-height: 100vh;
-            /* 背景图固定，不随容器/视口变化缩放 */
-            background-attachment: fixed;
+            top: 0; left: 0; 
+            width: 100vw;
+            /* 初始高度设为足够大，等待JS锁定具体像素值 */
+            height: 120vh; 
             background-size: cover; 
-            background-position: center center; 
+            background-position: center; 
             background-repeat: no-repeat;
             opacity: 0; 
-            transition: opacity 0.8s ease-in-out, filter 0.4s ease;
+            transition: opacity 0.8s ease-in-out;
             z-index: -2;
-            /* 仅给需要动画的属性开启will-change */
-            will-change: opacity, background-image;
-            /* 禁止背景层被键盘弹出影响 */
-            pointer-events: none;
+            transform: translate3d(0,0,0); /* 开启硬件加速 */
         }
 
         .overlay {
-            position: fixed; 
-            inset: 0;
-            width: 100%; 
-            height: var(--viewport-height);
-            min-height: 100vh;
-            background: var(--overlay-color);
-            z-index: -1; 
-            pointer-events: none;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: var(--overlay-color); z-index: -1; pointer-events: none;
         }
 
         .container {
-            max-width: 1100px; 
-            margin: 0 auto; 
-            padding: 40px 20px;
-            /* 容器最小高度固定为视口高度，不受键盘影响 */
-            min-height: var(--viewport-height);
-            position: relative; 
-            z-index: 1;
+            max-width: 1100px; margin: 0 auto; padding: 40px 20px;
+            min-height: 100vh; position: relative; z-index: 1;
         }
 
-        header { 
-            text-align: center; 
-            margin-bottom: 40px; 
-        }
-        .main-title { 
-            font-size: 2.5rem; 
-            font-weight: 800; 
-            letter-spacing: -1px; 
-            margin-bottom: 18px;
-        }
+        header { text-align: center; margin-bottom: 40px; }
+        .main-title { font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 18px; }
 
-        /* 全局毛玻璃组件样式 */
+        /* 全局去阴影 */
         .search-wrapper, .hitokoto-capsule, .nav-card, .footer-glass {
             background: var(--liquid-bg); 
             backdrop-filter: var(--liquid-blur); 
             -webkit-backdrop-filter: var(--liquid-blur);
             border: 1px solid var(--liquid-border);
-            box-shadow: none;
+            box-shadow: none !important; /* 强制去除阴影 */
         }
 
-        /* 搜索框 */
         .search-wrapper {
-            display: flex; 
-            align-items: center;
-            border-radius: 50px; 
-            padding: 16px 30px; 
-            width: 100%; 
-            max-width: 680px; 
-            margin: 0 auto 50px auto;
+            display: flex; align-items: center; border-radius: 50px; 
+            padding: 16px 30px; width: 100%; max-width: 680px; margin: 0 auto 50px auto;
+            transition: var(--transition-normal);
         }
         .search-wrapper:focus-within {
-            transform: scale(1.05);
-            background: var(--liquid-bg);
+            transform: scale(1.02);
             border-color: var(--accent-blue);
+            background: var(--liquid-bg);
         }
-        .search-wrapper img { 
-            width: 22px; 
-            height: 22px; 
-            margin-right: 14px; 
-            pointer-events: none;
-            loading="lazy"
-            decoding="async"
-        }
+        .search-wrapper img { width: 22px; height: 22px; margin-right: 14px; }
         .search-wrapper input { 
-            flex: 1; 
-            background: transparent; 
-            border: none; 
-            color: var(--text-color);
-            outline: none; 
-            font-size: 1.15rem; 
-            font-weight: 500;
-        }
-        .search-wrapper input::placeholder {
-            color: var(--text-color);
-            opacity: 0.5;
+            flex: 1; background: transparent; border: none; 
+            color: var(--text-color); outline: none; font-size: 1.15rem; font-weight: 500; 
         }
 
-        /* 一言胶囊 */
         .hitokoto-capsule {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 10px 24px; 
-            border-radius: 40px;
-            cursor: pointer; 
-            max-width: 80vw;
-            width: auto;
-            min-height: 38px;
-            overflow: hidden;
-            transition: height var(--hitokoto-fade-duration) ease-in-out, var(--transition-bounce);
+            display: inline-flex; align-items: center; justify-content: center;
+            padding: 10px 24px; border-radius: 40px; cursor: pointer; 
+            max-width: 85vw; transition: var(--transition-bounce);
         }
+        .hitokoto-capsule:active { transform: scale(0.92); }
+
         #hitokoto-text {
-            font-size: 0.92rem; 
-            font-weight: 500;
-            line-height: 1.5;
-            transition: opacity var(--hitokoto-fade-duration) ease-in-out, transform var(--hitokoto-fade-duration) ease-in-out;
-            opacity: 1;
-            transform: translateY(0);
-            white-space: normal;
-            word-break: keep-all;
-            text-align: center;
+            font-size: 0.92rem; font-weight: 500; line-height: 1.5;
+            transition: opacity var(--hitokoto-fade-duration) ease, transform var(--hitokoto-fade-duration) ease;
         }
-        #hitokoto-text.fade-out {
-            opacity: 0;
-            transform: translateY(-4px);
-        }
-        #hitokoto-text.fade-in {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        .fade-out { opacity: 0; transform: translateY(-5px); }
+        .fade-in { opacity: 1; transform: translateY(0); }
 
         .category-title {
-            font-size: 1.1rem; 
-            color: var(--text-color);
-            margin: 35px 0 20px 0;
-            font-weight: 700; 
-            border-left: 4px solid var(--accent-blue);
-            padding-left: 14px; 
-            border-radius: 2px;
+            font-size: 1.1rem; margin: 35px 0 20px 0; font-weight: 700; 
+            border-left: 4px solid var(--accent-blue); padding-left: 14px;
         }
 
-        .nav-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
-            gap: 20px; 
-        }
-
-        /* 导航卡片核心样式 */
+        .nav-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
         .nav-card {
-            border-radius: 24px; 
-            padding: 24px; 
-            text-decoration: none; 
-            color: var(--text-color);
-            opacity: 0; 
-            transform: translateY(30px);
-            overflow: hidden;
-            position: relative;
+            border-radius: 24px; padding: 24px; text-decoration: none; 
+            color: var(--text-color); opacity: 0; transform: translateY(20px);
+            transition: background 0.3s, border-color 0.3s, transform 0.4s var(--transition-bounce);
         }
-        .nav-card.show { 
-            opacity: 1; 
-            transform: translateY(0); 
-        }
-        .card-title { 
-            font-size: 1.1rem; 
-            font-weight: 700; 
-            margin-bottom: 8px;
-            transition: var(--transition-normal);
-        }
-        .card-desc { 
-            font-size: 0.88rem; 
-            color: var(--text-color);
-            opacity: 0.55;
-            line-height: 1.5;
-            transition: var(--transition-normal);
+        .nav-card.show { opacity: 1; transform: translateY(0); }
+        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+        .card-desc { font-size: 0.88rem; opacity: 0.6; line-height: 1.5; }
+
+        @media (hover: hover) {
+            .nav-card:hover { transform: translateY(-5px); border-color: var(--accent-blue); }
+            .footer-link:hover { color: var(--accent-blue); opacity: 1; }
         }
 
-        /* 移动端适配 */
-        body.mobile-mode .main-title { 
-            font-size: 1.4rem; 
-        }
-        body.mobile-mode .nav-grid { 
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 12px; 
-        }
-        body.mobile-mode .nav-card { 
-            padding: 18px; 
-            border-radius: 16px; 
-        }
-        body.mobile-mode .card-desc { 
-            -webkit-line-clamp: 2; 
-            display: -webkit-box; 
-            -webkit-box-orient: vertical; 
-            overflow: hidden; 
-        }
-        body.mobile-mode .hitokoto-capsule {
-            max-width: 90vw;
-        }
-        body.mobile-mode #hitokoto-text {
-            word-break: break-word;
-        }
+        body.mobile-mode .main-title { font-size: 1.5rem; }
+        body.mobile-mode .nav-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        body.mobile-mode .nav-card { padding: 16px; border-radius: 18px; }
+        body.mobile-mode .card-desc { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-        footer { 
-            margin: 60px 0 30px 0; 
-            text-align: center; 
-        }
-        .footer-glass { 
-            display: inline-flex; 
-            gap: 20px; 
-            padding: 14px 35px; 
-            border-radius: 50px; 
-        }
-        .footer-link { 
-            color: var(--text-color);
-            text-decoration: none; 
-            font-size: 0.85rem; 
-            font-weight: 600; 
-            opacity: 0.7; 
-            cursor: pointer;
-            transition: var(--transition-bounce);
-        }
-
-        /* 统一桌面端hover交互 */
-        @media (hover: hover) and (pointer: fine) {
-            .search-wrapper:hover {
-                transform: scale(1.02);
-                background: rgba(255, 255, 255, 0.12);
-                border-color: rgba(255, 255, 255, 0.25);
-            }
-            /* 浅色模式hover适配 */
-            @media (prefers-color-scheme: light) {
-                .search-wrapper:hover {
-                    background: rgba(0, 0, 0, 0.08);
-                    border-color: rgba(0, 0, 0, 0.18);
-                }
-            }
-            .hitokoto-capsule:hover {
-                transform: scale(1.05);
-                background: rgba(255, 255, 255, 0.15);
-                border-color: var(--accent-blue);
-            }
-            @media (prefers-color-scheme: light) {
-                .hitokoto-capsule:hover {
-                    background: rgba(0, 0, 0, 0.1);
-                }
-            }
-            .nav-card:hover {
-                transform: translateY(-8px) scale(1.02);
-                background: rgba(255, 255, 255, 0.15);
-                border-color: var(--accent-blue);
-            }
-            @media (prefers-color-scheme: light) {
-                .nav-card:hover {
-                    background: rgba(0, 0, 0, 0.1);
-                }
-            }
-            .nav-card:hover .card-title {
-                color: var(--accent-blue);
-            }
-            .nav-card:hover .card-desc {
-                opacity: 0.8;
-            }
-            .footer-link:hover { 
-                opacity: 1; 
-                color: var(--accent-blue);
-                transform: scale(1.1);
-            }
-        }
-
-        /* 统一移动端触摸反馈 */
-        .hitokoto-capsule:active { 
-            transform: scale(0.90); 
-            background: rgba(255,255,255,0.2); 
-        }
-        @media (prefers-color-scheme: light) {
-            .hitokoto-capsule:active {
-                background: rgba(0, 0, 0, 0.15);
-            }
-        }
-        .nav-card:active {
-            transform: scale(0.96);
-            background: rgba(255, 255, 255, 0.2);
-        }
-        @media (prefers-color-scheme: light) {
-            .nav-card:active {
-                background: rgba(0, 0, 0, 0.15);
-            }
-        }
-        .footer-link:active {
-            transform: scale(0.9);
-            opacity: 1;
-            color: var(--accent-blue);
-        }
+        footer { margin: 60px 0 30px 0; text-align: center; }
+        .footer-glass { display: inline-flex; gap: 20px; padding: 14px 35px; border-radius: 50px; }
+        .footer-link { color: var(--text-color); text-decoration: none; font-size: 0.85rem; font-weight: 600; opacity: 0.7; }
     </style>
 </head>
 <body>
@@ -392,36 +152,26 @@
     <div class="container">
         <header>
             <h1 class="main-title">山本小面包🍞的导航页</h1>
-            <div class="hitokoto-capsule interactive-element" id="hitokoto-btn">
-                <span id="hitokoto-text">正在捕捉...</span>
+            <div class="hitokoto-capsule" id="hitokoto-btn">
+                <span id="hitokoto-text">正在捕捉诗句...</span>
             </div>
         </header>
         <main>
-            <div class="search-wrapper interactive-element">
-                <img src="https://picui.ogmua.cn/s1/2026/03/30/69c94d3fbf8c8.webp" alt="Bing" onerror="this.style.display='none'">
+            <div class="search-wrapper">
+                <img src="https://picui.ogmua.cn/s1/2026/03/30/69c94d3fbf8c8.webp" alt="Bing">
                 <input type="text" id="search-input" placeholder="在 Bing 上搜索" autocomplete="off">
             </div>
             <div id="nav-container"></div>
         </main>
         <footer>
             <div class="footer-glass">
-                <a id="download-bg" class="footer-link interactive-element" target="_blank" rel="noopener noreferrer">📥 下载壁纸</a>
-                <span id="refresh-bg" class="footer-link interactive-element">🔄 切换背景</span>
+                <a id="download-bg" class="footer-link" target="_blank">📥 下载壁纸</a>
+                <span id="refresh-bg" class="footer-link">🔄 切换背景</span>
             </div>
         </footer>
     </div>
 
     <script>
-        // 防抖函数
-        const debounce = (fn, delay = 300) => {
-            let timer = null;
-            return (...args) => {
-                clearTimeout(timer);
-                timer = setTimeout(() => fn(...args), delay);
-            };
-        };
-
-        // DOM节点提前缓存
         const dom = {
             body: document.body,
             bgLayer: document.getElementById('bg-layer'),
@@ -429,170 +179,91 @@
             refreshBg: document.getElementById('refresh-bg'),
             hitokotoBtn: document.getElementById('hitokoto-btn'),
             hitokotoText: document.getElementById('hitokoto-text'),
-            hitokotoCapsule: document.getElementById('hitokoto-btn'),
             searchInput: document.getElementById('search-input'),
             navContainer: document.getElementById('nav-container')
         };
 
-        // 滚动入场动画观察者
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('show');
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, {
-            rootMargin: '0px 0px -100px 0px',
-            threshold: 0.1
-        });
+        // 1. 修复键盘弹出背景放大问题的逻辑核心
+        let lastWidth = window.innerWidth;
+        const fixBgHeight = () => {
+            const currentWidth = window.innerWidth;
+            // 只有宽度改变（横竖屏切换）时才更新背景高度，忽略键盘弹起引起的高度变化
+            if (currentWidth !== lastWidth || !dom.bgLayer.style.height) {
+                const screenHeight = window.screen.height || window.innerHeight;
+                dom.bgLayer.style.height = `${screenHeight + 100}px`; // 额外多出100px确保不露底
+                lastWidth = currentWidth;
+            }
+        };
 
-        // 设备判断
-        const isMobile = /Android|iPhone|iPad|iPod|Macintosh/i.test(navigator.userAgent) && 'ontouchend' in window;
+        // 设备初始化
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         if (isMobile) dom.body.classList.add('mobile-mode');
 
-        // 修复核心6：彻底移除背景高度动态修改，键盘弹出不再改变背景尺寸
-        // 仅页面初始化时执行一次，不再监听resize修改背景
-        const initPage = () => {
-            // 仅做页面初始化适配，不再动态修改
-            document.documentElement.style.setProperty('--viewport-height', `${window.innerHeight}px`);
-        };
-        initPage();
+        fixBgHeight();
+        window.addEventListener('resize', fixBgHeight);
 
-        // 仅屏幕旋转时重新适配，键盘弹出不触发
-        window.addEventListener('orientationchange', debounce(() => {
-            setTimeout(initPage, 100);
-        }, 200));
-
-        // 背景加载与切换（不再修改背景高度，彻底解决放大问题）
-        const loadBg = debounce(async () => {
+        // 2. 背景加载逻辑
+        const loadBg = async () => {
             const api = isMobile ? 'https://api.yppp.net/pe.php' : 'https://api.yppp.net/pc.php';
             try {
-                dom.bgLayer.style.filter = 'blur(10px)';
                 dom.bgLayer.style.opacity = 0;
-
                 const res = await fetch(api);
-                const realUrl = res.url;
+                const url = res.url;
                 const img = new Image();
-                img.src = realUrl;
-                img.decoding = 'async';
-                
+                img.src = url;
                 img.onload = () => {
-                    dom.bgLayer.style.backgroundImage = `url('${realUrl}')`;
-                    dom.bgLayer.style.filter = 'blur(0px)';
+                    dom.bgLayer.style.backgroundImage = `url('${url}')`;
                     dom.bgLayer.style.opacity = 1;
-                    dom.downloadBg.href = realUrl;
+                    dom.downloadBg.href = url;
                 };
-
-                img.onerror = () => {
-                    throw new Error('背景图片加载失败');
-                };
-            } catch (e) {
-                console.error("背景加载失败", e);
-                // 加载失败兜底，恢复透明不显示
-                dom.bgLayer.style.opacity = 0;
-            }
-        }, 500);
-
-        // 初始化背景与切换事件
+            } catch (e) { console.error("BG Error"); }
+        };
         loadBg();
         dom.refreshBg.onclick = loadBg;
 
-        // 一言动画核心逻辑
-        let isHitokotoAnimating = false;
-        const FADE_DURATION = 220;
-
-        const fadeOutText = () => {
-            return new Promise((resolve) => {
-                dom.hitokotoText.classList.remove('fade-in');
-                dom.hitokotoText.classList.add('fade-out');
-                setTimeout(resolve, FADE_DURATION);
-            });
-        };
-
-        const fadeInText = () => {
-            return new Promise((resolve) => {
-                void dom.hitokotoText.offsetHeight;
+        // 3. 一言交互逻辑 (带点击弹性反馈延迟)
+        let isFetching = false;
+        const fetchHitokoto = async () => {
+            if (isFetching) return;
+            isFetching = true;
+            
+            dom.hitokotoText.classList.add('fade-out');
+            
+            try {
+                // 确保点击动画至少播放一段时间
+                const [res] = await Promise.all([
+                    fetch('https://v1.hitokoto.cn?max_length=25'),
+                    new Promise(r => setTimeout(r, 400))
+                ]);
+                const data = await res.json();
+                dom.hitokotoText.innerText = `${data.hitokoto} —— 「${data.from}」`;
+            } catch (e) {
+                dom.hitokotoText.innerText = "纵使疾风起，人生不言弃。";
+            } finally {
                 dom.hitokotoText.classList.remove('fade-out');
                 dom.hitokotoText.classList.add('fade-in');
-                setTimeout(resolve, FADE_DURATION);
-            });
-        };
-
-        const fixCapsuleHeight = () => {
-            dom.hitokotoCapsule.style.height = 'auto';
-            const textHeight = dom.hitokotoText.offsetHeight;
-            dom.hitokotoCapsule.style.height = `${Math.max(textHeight + 20, 38)}px`;
-        };
-
-        const fetchHitokoto = debounce(async () => {
-            if (isHitokotoAnimating) return;
-            isHitokotoAnimating = true;
-
-            try {
-                await fadeOutText();
-                dom.hitokotoText.innerText = "正在捕捉...";
-                fixCapsuleHeight();
-                await fadeInText();
-
-                const res = await fetch('https://v1.hitokoto.cn?c=a&max_length=25');
-                const data = await res.json();
-                const newText = `${data.hitokoto} —— 「${data.from}」`;
-
-                await fadeOutText();
-                dom.hitokotoText.innerText = newText;
-                fixCapsuleHeight();
-                await fadeInText();
-
-                dom.hitokotoCapsule.style.height = 'auto';
-
-            } catch (e) {
-                await fadeOutText();
-                dom.hitokotoText.innerText = "纵使疾风起，人生不言弃。";
-                fixCapsuleHeight();
-                await fadeInText();
-                dom.hitokotoCapsule.style.height = 'auto';
-            } finally {
-                isHitokotoAnimating = false;
+                setTimeout(() => {
+                    dom.hitokotoText.classList.remove('fade-in');
+                    isFetching = false;
+                }, 300);
             }
-        }, 500);
-
-        // 初始化一言
-        window.addEventListener('DOMContentLoaded', () => {
-            dom.hitokotoText.classList.add('fade-out');
-            fetchHitokoto();
-        });
-        window.addEventListener('resize', debounce(() => {
-            dom.hitokotoCapsule.style.height = 'auto';
-        }, 200));
+        };
         dom.hitokotoBtn.onclick = fetchHitokoto;
+        fetchHitokoto();
 
-        // 搜索功能
-        const handleSearch = debounce((keyword) => {
-            if (keyword.trim()) {
-                window.open(`https://www.bing.com/search?q=${encodeURIComponent(keyword)}`, '_blank', 'noopener noreferrer');
-            }
-        }, 300);
-
+        // 4. 搜索功能
         dom.searchInput.onkeypress = (e) => {
-            if (e.key === 'Enter') {
-                handleSearch(e.target.value);
+            if (e.key === 'Enter' && e.target.value.trim()) {
+                window.open(`https://www.bing.com/search?q=${encodeURIComponent(e.target.value)}`, '_blank');
                 e.target.blur();
             }
         };
 
-        // 修复核心7：搜索框聚焦/失焦优化，防止iOS键盘弹出时页面滚动
-        dom.searchInput.addEventListener('focus', () => {
-            // 聚焦时禁止页面过度滚动
-            document.body.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
+        // 5. 导航卡片渲染
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(en => { if (en.isIntersecting) en.target.classList.add('show'); });
+        }, { threshold: 0.1 });
 
-        dom.searchInput.addEventListener('blur', () => {
-            // 失焦时恢复页面状态
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-
-        // 导航渲染
         const renderNav = async () => {
             try {
                 const res = await fetch('./config.yml');
@@ -607,42 +278,19 @@
 
                     const grid = document.createElement('div');
                     grid.className = 'nav-grid';
-
                     cat.links.forEach(link => {
                         const a = document.createElement('a');
-                        a.className = 'nav-card interactive-element';
-                        a.href = link.url; 
-                        a.target = '_blank';
-                        a.rel = 'noopener noreferrer';
-                        a.innerHTML = `
-                            <div class="card-title">${link.title}</div>
-                            <div class="card-desc">${link.desc}</div>
-                        `;
-                        observer.observe(a);
+                        a.className = 'nav-card';
+                        a.href = link.url; a.target = '_blank';
+                        a.innerHTML = `<div class="card-title">${link.title}</div><div class="card-desc">${link.desc}</div>`;
                         grid.appendChild(a);
+                        observer.observe(a);
                     });
                     dom.navContainer.appendChild(grid);
                 });
-            } catch (e) {
-                console.error("导航配置加载失败", e);
-                dom.navContainer.innerHTML = '<p style="text-align:center;padding:20px;color:var(--text-color);opacity:0.6;">导航配置加载失败，请检查config.yml文件</p>';
-            }
+            } catch (e) { console.error("YAML Error"); }
         };
         renderNav();
-
-        // 移动端优化：滚动时收起键盘
-        if (isMobile) {
-            window.addEventListener('scroll', () => {
-                if (document.activeElement.tagName === 'INPUT') {
-                    document.activeElement.blur();
-                }
-            }, { passive: true });
-        }
-
-        // 页面卸载时清理内存
-        window.addEventListener('beforeunload', () => {
-            observer && observer.disconnect();
-        });
     </script>
 </body>
 </html>
