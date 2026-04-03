@@ -98,7 +98,7 @@
             margin-bottom: 18px;
         }
 
-        /* 核心修改：移除 border 属性 */
+        /* 基础样式：全部移除边框 */
         .search-wrapper, .hitokoto-capsule, .nav-card, .footer-glass {
             background: var(--liquid-bg); 
             backdrop-filter: var(--liquid-blur); 
@@ -107,6 +107,7 @@
             box-shadow: none;
         }
 
+        /* 搜索框特化样式 */
         .search-wrapper {
             display: flex; 
             align-items: center;
@@ -115,10 +116,14 @@
             width: 100%; 
             max-width: 680px; 
             margin: 0 auto 50px auto;
+            /* 预留1px透明边框，防止激活时产生布局抖动 */
+            border: 1px solid transparent; 
         }
         .search-wrapper:focus-within {
             transform: scale(1.05);
             background: var(--liquid-bg);
+            /* 还原聚焦时的蓝色边框 */
+            border-color: var(--accent-blue);
         }
         .search-wrapper img { 
             width: 22px; 
@@ -387,7 +392,6 @@
         const isMobile = /Android|iPhone|iPad|iPod|Macintosh/i.test(navigator.userAgent) && 'ontouchend' in window;
         if (isMobile) dom.body.classList.add('mobile-mode');
 
-        // 背景尺寸锁定逻辑
         let lastWidth = window.innerWidth;
         const fixBg = () => {
             const currentWidth = window.innerWidth;
